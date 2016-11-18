@@ -1,0 +1,2068 @@
+\documentclass[prd,preprint,floatfix,showpacs]{revtex4-1}
+\usepackage[pdftex]{color}
+\usepackage{latexsym,amssymb,amsmath,gensymb}
+\usepackage{graphicx,dcolumn,bm}
+\usepackage{kec,bigints}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{caption}
+\bibliographystyle{apsrev4-1.bst}
+\begin{document}
+
+\title{Path integrals for awkward actions}
+
+\author{David Amdahl} 
+\email{damdahl@unm.edu}
+\author{Kevin Cahill}
+\email{cahill@unm.edu}
+\affiliation{Department of Physics \& Astronomy,
+University of New Mexico, Albuquerque, New Mexico 
+87131, USA}
+\affiliation{School of Computational Sciences,
+Korea Institute for Advanced Study, Seoul 130-722, Korea}
+
+\date{\today}
+ 
+
+\begin {abstract}
+Time derivatives of scalar fields
+occur quadratically in textbook actions.
+A simple Legendre transformation 
+turns the lagrangian into a 
+hamiltonian that is quadratic in the momenta.
+The path integral over the momenta is gaussian.
+Mean values of operators are 
+euclidian path integrals of their classical counterparts
+with positive weight functions.
+Monte Carlo simulations can estimate 
+such mean values.
+\par
+This familiar framework falls apart
+when the time derivatives do not occur
+quadratically.  
+The Legendre transformation 
+becomes difficult or so intractable
+that one can't find the hamiltonian.  
+Even if one finds the hamiltonian, 
+it usually is so complicated
+that one can't path-integrate 
+over the momenta and get 
+a euclidian path integral with
+a positive weight function.
+Monte Carlo simulations don't work
+when the weight function
+assumes negative or complex values.
+\par
+This paper solves both problems.
+It shows how to make path integrals 
+without knowing the hamiltonian. 
+It also shows how to estimate
+complex path integrals 
+by combining the Monte Carlo method
+with parallel numerical integration and
+a look-up table. 
+This ``Atlantic City method" lets one
+estimate the energy densities
+of theories that, unlike those 
+with quadratic time derivatives,
+may have finite energy densities.
+It may lead to a theory of dark energy.
+\par 
+The approximation of multiple
+integrals over weight functions
+that assume negative or complex values
+is a long-standing problem 
+in applied mathematics,
+called the sign problem.
+The Atlantic City method
+solves the sign problem 
+for certain classes of integrals.
+\end {abstract}
+
+
+\maketitle
+
+\section {Introduction
+\label {Introduction} }
+Despite the success of renormalization,
+infinities remain a major problem
+in quantum field theory. 
+This problem
+grows more important
+as cosmological observations
+continue to support the existence of 
+dark energy~\cite{PlanckCosmologicalNA},
+which may be the energy density 
+of empty space.
+We need to be able to compute 
+finite energy densities. 
+This paper advances
+theories of scalar fields 
+a small step closer to that goal.
+\par
+The ground-state energy
+of a theory
+is the low-temperature limit 
+of the logarithmic derivative 
+of the partition function \( Z(\beta) \)
+with respect to the inverse temperature \( \beta \)\@.
+%It is a ratio of euclidian path integrals.
+If the action density \( L \) is quadratic
+in the time derivatives \( \dot \phi \) 
+of the fields,
+then a linear Legendre transformation
+gives a hamiltonian \( H \) that is
+quadratic 
+in the momenta \( \pi \)\@.
+One then can use the hamiltonian
+to write the partition function
+as a euclidian path integral
+in which the momentum integrals
+are gaussian.
+The gaussian integrals give
+a partition function that is 
+a path integral of a probability
+distribution in the fields, and 
+one can use Monte Carlo methods
+to estimate it.
+\par
+This simple framework falls apart
+when the time derivatives do not occur
+quadratically.  
+This collapse is unfortunate
+because theories of scalar fields 
+that are quadratic
+in the time derivatives of the fields
+have infinite energy densities.
+\par
+An awkward action is one that is not quadratic
+in the time derivatives but that is simple
+enough for one to find its hamiltonian.
+One typically can't integrate over the momentum \( \pi \),
+and the partition function is a double path integral
+with a complex weight function
+\begin{align} 
+Z(\beta) ={}& 
+\int \exp \lt\{ \int_0^\beta \int \left[ i \dot \phi \pi 
+- H(\phi, \pi) \right] dt \, d^3x \rt\} D\phi D\pi .
+\label {the path integral for the partition function}
+\end{align}
+Standard Monte Carlo methods fail
+when the weight function assumes negative
+or complex values. 
+\par
+A very awkward action is one
+in which the time derivatives of the fields
+are related to their momenta and to 
+the fields and their spatial derivatives
+by equations that are not even quartic
+and that have no known solutions.
+Very awkward actions
+have no known hamiltonians.
+To study the ground states
+of this wide class of theories,
+we show in
+Sec.~\ref {Path integrals for very awkward actions}
+how to write the partition function
+of such a theory as a path integral
+without knowledge of the hamiltonian.
+Our formula is a double path integral
+over the fields \( \phi \) and over
+auxilliary time derivatives \( \dot \psi \)
+\begin{equation}
+   \begin{split}
+Z(\beta) = {}&
+\! \int \exp \bigg\{ \int_0^\beta \! \int 
+\Big[ ( i \dot \phi_\ell
+- \dot \psi_\ell ) \frac{ \p  L(\phi, \dot \psi) }
+{ \p \dot \psi_\ell }
++ L(\phi, \dot \psi) 
+\Big] dt d^3x \bigg\}  \lt| \det \! 
+\lt( \frac{ \p^2  L(\phi, \dot \psi) }
+{ \p \dot \psi_k \p \dot \psi_\ell }  \rt) \rt|
+\, D\phi D\dot\psi .
+\label {first proposed path integral}
+   \end{split}
+\end{equation}
+This path integral, like the one 
+(\ref {the path integral for the partition function})
+for awkward actions,
+has a complex weight function
+that is not a probability distribution.
+Again the usual Monte Carlo methods
+do not work.  
+Both path integrals are examples
+of the sign problem~\cite{Behtash:2015loa, *Scorzato:2015qts, *Gattringer:2016kco}.
+\par
+To estimate such complex path integrals,
+we introduce in 
+Sec.\,\ref{The Atlantic City method}
+a Atlantic City method that combines
+Monte Carlo simulation with parallel numerical integration.
+In theories with awkward actions,
+we numerically integrate over the momenta
+\( \pi \) in the double path integral 
+(\ref {the path integral for the partition function})\@.
+In theories with very awkward actions,
+we numerically integrate over the auxilliary
+time derivatives \( \dot \psi \) in the double path integral 
+(\ref {first proposed path integral})\@.
+In both cases, we store the values of the integrals
+in lookup tables.
+We call this the Atlantic City method.
+It is well suited to
+parallel computation and may solve
+some versions of the sign 
+problem~\cite{Behtash:2015loa, *Scorzato:2015qts, *Gattringer:2016kco}.
+We demonstrate and test this method
+by applying it to a
+quantum-mechanical version of the scalar Born-Infeld 
+model~\cite{Born:1934gh, *Born:1934dia, *Born:1935ap}
+considered as a theory with an awkward action
+in
+Sec.\,\ref {Application of the Atlantic City method to the Born-Infeld oscillator} and as a theory with a very awkward action in
+Sec.\,\ref{The Atlantic City model applied to a very awkward action}\@.
+\par
+The paper ends with a summary in Sec.\,\ref{Summary}
+and does not discuss higher-derivative
+theories~\cite{Ostrogradsky1850,*BenderMannheim2007, *
+BenderMannheim2008} 
+or those in which some 
+fields have no time derivatives
+\cite{Dirac1950, *Dirac1958, *Dirac1964}\@.
+
+\section {Review of Legendre transformations and path integrals
+\label {Review of Legendre transformations and path integrals} }
+
+The lagrangian of a theory tells us about symmetries
+and equations of motion, but one needs
+a hamiltonian to determine 
+the time evolution of states and their energies. 
+To find the hamiltonian of a theory
+of scalar fields 
+\( \phi = \{\phi_1,\dots, \phi_n\} \),
+one defines the conjugate momenta 
+\( \pi = \{\pi_1,\dots, \pi_n\} \) as
+the derivatives of the action density
+\begin{equation}
+\pi_j = \frac{\p  L }{\p \dot \phi_j} ,
+\label {def of pi}
+\end{equation}
+and inverts these equations so as to
+write the time derivatives 
+\( \dot \phi_j = \dot \phi_j (\phi, \pi) \)
+of the fields in terms of 
+the fields \( \phi_\ell \) 
+and their momenta \( \pi_\ell \)\@.
+The hamiltonian density then is
+\begin{equation}
+H = \sum_{j=1}^n \pi_j \dot \phi_j(\phi,\pi) 
+- L (\phi,\dot \phi(\phi,\pi) ) .
+\label {energy density}
+\end{equation}
+When the action is quadratic 
+in the time derivatives,
+Legendre's equations (\ref {def of pi})
+are linear.  
+\par
+Once one has a hamiltonian,
+one inserts complete sets
+of eigenstates of the fields \( \phi_j \) and 
+their conjugate momenta \( \pi_j \)
+into the Boltzmann operator 
+\( \exp( - \beta H ) = ( \exp( - \beta H/n ) )^n \)
+and writes the partition function as
+the complex path integral
+\begin{equation}
+Z(\beta) ={} \Tr \, e^{-\beta H}
+= \int \la \phi | e^{- \beta H} | \phi \ra D\phi = 
+\int \exp \lt\{ \int_0^\beta \int \left[ i \dot \phi_j \pi_j 
+- H(\phi, \pi) \right] dt \, d^3x \rt\} D\phi D\pi .
+\label {leads to the partition function}
+\end{equation}
+If one can integrate over the momenta,
+then one gets Feynman's formula
+\begin{equation}
+Z(\beta) ={} \int \exp 
+\lt[ \int_0^\beta \int 
+{} - L_e(\phi, \dot \phi) \, dt \, d^3x \rt] D\phi 
+\label {one gets the classic formula}
+\end{equation}
+in which \( L_e \) is the euclidian
+action density, and \( D\phi \) is suitably
+redefined.
+In textbook theories, \( L_e \) 
+is real and positive, and
+the exponential \( \exp[{} - L_e(\phi,\dot \phi) ] \)
+is a probability distribution
+well-suited to Monte Carlo methods.
+\par
+This procedure is straightforward when 
+the action is quadratic
+in its time derivatives, 
+and the integrals over the momenta are gaussian.
+But when the equations
+(\ref {def of pi}) that define
+the momenta have square roots,
+the hamiltonian also has a square root.
+When those equations are cubic
+or quartic, the Legendre transformation
+and the hamiltonian are much more
+complicated.
+When they are worse than
+quartic, no solution exists, and the 
+hamiltonian is inaccessible. 
+We solve this problem in 
+Sec.~\ref{Path integrals for very awkward actions}\@.
+
+\section {Path integrals for very awkward actions
+\label {Path integrals for very awkward actions} }
+
+\par
+Our solution to the problem
+of making a path integral without a
+hamiltonian is to use
+functional integration to do Legendre's 
+transformation by means of
+delta functionals that
+impose the relation (\ref {def of pi})
+between momenta and 
+the fields and their derivatives.
+Our formula for the partition function 
+is a double path integral over the fields \( \phi \)
+and over auxiliary time derivatives \( \dot \psi \)
+\begin{equation}
+   \begin{split}
+Z(\beta) = {}&
+\! \int \exp \bigg\{ \int_0^\beta \! \int 
+\Big[ ( i \dot \phi_\ell
+- \dot \psi_\ell ) \frac{ \p  L(\phi, \dot \psi) }
+{ \p \dot \psi_\ell }
++ L(\phi, \dot \psi) 
+\Big] dt d^3x \bigg\}  \lt| \det \! 
+\lt( \frac{ \p^2  L(\phi, \dot \psi) }
+{ \p \dot \psi_k \p \dot \psi_\ell }  \rt) \rt|
+\, D\phi D\dot\psi 
+\label {proposed path integral}
+   \end{split}
+\end{equation}
+in which the determinant converts 
+\( D\dot \psi \) into \( D\pi \),
+and the energy density
+\begin{equation}
+E(\phi, \dot \psi) = {}
+\dot \psi_\ell \, \frac{ \p  L(\phi, \dot \psi) }
+{ \p \dot \psi_\ell }
+- L(\phi, \dot \psi) 
+\label {pseudo-hamiltonian}
+\end{equation}
+is the hamiltonian density when
+the time derivatives
+\( \dot \psi_\ell  \) 
+respect Legendre's relation (\ref {def of pi})\@.
+If the action is time independent, then
+the spatial integral of \( E(\phi, \dot \psi) \)
+is a constant when 
+\( \dot \psi_\ell = \dot \phi_\ell (\phi, \pi) \) and
+the equations of motion are obeyed.
+\par
+The double path integral (\ref {proposed path integral})
+for the partition function \( Z(\beta) \) is 
+complex and ill-suited to estimation
+by Monte Carlo methods.
+We solve this problem in 
+section~\ref {The Atlantic City method}\@.
+\par
+To derive our formula (\ref {proposed path integral}),
+we write the path integral 
+(\ref {leads to the partition function}) as
+\begin{equation}
+   \begin{split}
+Z(\beta) = {}&
+\int \exp \lt\{ \int_0^\beta \int \lt[ i \, \dot \phi_j \pi_j 
+- ( \pi_k \dot \psi_k - L(\phi, \dot \psi) )
+\rt] dt d^3x \rt\} \\
+{}& \times \exp \lt[ i \int \lt( \pi_\ell 
+- \frac{ \p  L }{ \p \dot \psi_\ell } \rt)
+a_\ell \, d^4x \rt] 
+\lt| \det \lt( \frac{ \p^2  L }
+ { \p \dot \psi_k \p \dot \psi_\ell }  \rt) \rt| 
+D\phi D\pi D\dot\psi Da 
+\label {quartic path integral}
+   \end{split}
+\end{equation}
+in which the integration over
+the \( n \) auxiliary fields \( a_\ell \) makes
+the second exponential 
+a delta functional 
+\( \d( \pi -  \p L/ \p \dot \psi ) \) that enforces
+the definition (\ref {def of pi}) of the momentum
+\( \pi_j \)
+as the derivative of the action density \( L \)
+with respect to the time derivative \( \dot \phi_j \)\@.
+The jacobian is an \( n \times n \) 
+determinant that converts \( D\dot \psi \)
+to \( D\pi \)\@.
+%the determinant of the matrix \( \p^2 L / \p \dot \psi^2 \)
+%makes it a delta functional of the variables \( \dot \psi \)\@.
+The integration is over all fields 
+that are periodic with period \( \beta \)\@.
+Integrating first over \( a \), we get
+\begin{equation}
+   \begin{split}
+Z(\beta) = {}&
+\int \exp \lt\{ \int_0^\beta \int  \lt[ i \dot \phi_j \pi_j 
+- ( \pi_k \dot \psi_k - L(\phi, \dot \psi) )
+\rt] dt d^3x \rt\} \\
+{}& \times \prod_{\ell=1}^n \lt[ \d \lt( \pi_\ell 
+- \frac{ \p  L }{ \p \dot \psi_\ell } \rt) \rt]
+\lt| \det \lt( \frac{ \p^2  L }
+{ \p \dot \psi_k \p \dot \psi_\ell }  \rt) \rt|
+D\phi D\pi D\dot\psi  .
+\label {triple path integral}
+   \end{split}
+\end{equation}
+To integrate over the 
+auxiliary time derivatives \( \dot \psi \),
+we recall the delta-function rule
+that if a vector 
+\( g(x) = (g_1(x_1, \dots, x_n),   \dots, g_n(x_1, \dots, x_n)) \)
+is zero only at \( x = x_0 \), then 
+\begin{equation}
+\int \d^n( g_1(x_1, \dots, x_n),   \dots, g_n(x_1, \dots, x_n)) 
+\lt| \det\lt(\frac{\p g_k(x)}{\p x_\ell} \rt) \rt| d^nx = {}
+g(x_{10},\dots,x_{n0}) .
+\end{equation}
+Thus integrating the triple path integral
+(\ref {triple path integral})
+over \( \dot \psi \), we find that
+the delta functional
+and the jacobian require 
+the time derivatives to assume values
+\( \dot \psi_0(\phi,\pi) = \dot \phi(\phi,\pi) \)
+that satisfy the definition (\ref {def of pi})
+of the momenta,
+and we get 
+the path integral (\ref {leads to the partition function})
+over \( \phi \) and \( \pi \)
+\begin{equation}
+   \begin{split}
+Z(\beta) = {}&
+\int \exp \lt\{ \int_0^\beta \int  \lt[ i \dot \phi \pi 
+- ( \pi \dot \psi_0(\phi,\pi) - L(\phi, \dot \psi_0(\phi,\pi)) )
+\rt] dt d^3x \rt\} D\phi D\pi 
+\\
+= {}&
+\int \exp \lt\{ \int_0^\beta \int \left[ i \dot \phi_j \pi_j 
+- H(\phi, \pi) \right] dt \, d^3x \rt\} D\phi D\pi .
+\label {phi pi path integral redux}
+   \end{split}
+\end{equation}
+On the other hand, if we integrate
+the triple path integral (\ref {triple path integral})
+over \( \pi \), then we get our proposed
+formula (\ref {proposed path integral})
+\begin{equation}
+   \begin{split}
+Z(\beta) = {}&
+\! \int \exp \lt\{ \int_0^\beta \! \int \left[
+( i \dot \phi_\ell - \dot \psi_\ell ) 
+\frac{ \p  L(\phi, \dot \psi) }
+{ \p \dot \psi_\ell }
++ L(\phi, \dot \psi) \right]
+dt d^3x \rt\}
+\lt| \det \lt( \frac{ \p^2  L(\phi, \dot \psi) }
+{ \p \dot \psi_k \p \dot \psi_\ell }  \rt) \rt|
+D\phi D\dot\psi .
+\label {the path integral}
+   \end{split}
+\end{equation}
+This functional integral generalizes 
+the path integral to theories of scalar fields
+in which the hamiltonian is unknown.
+A similar formula should work in
+theories of vector and tensor fields,
+apart from the issue of constraints.
+\par
+Our first example is a free scalar field
+with action density
+\begin{equation}
+L = \half \, \p_\mu \phi \, \p^\mu \phi 
+- \half m^2 \phi^2 .
+\label {free L}
+\end{equation}
+The determinant in our formula
+(\ref {the path integral}) is unity because
+\begin{equation}
+\frac{ \p^2  L(\phi, \dot \psi) }
+{ \p \dot \psi^2 } = 1 .
+\end{equation}
+To simplify our notation,
+we will use the abbreviation
+\begin{equation}
+\int_0^\beta dt \! \int d^3x \, \equiv \int^\beta d^4x.
+\label {we will use the compact notation}
+\end{equation}
+In this notation,
+the proposed path integral
+(\ref {the path integral}) 
+for the free field theory (\ref {free L}) is
+\begin{equation}
+   \begin{split}
+Z(\beta) = {}&
+\int \exp \lt\{ \int^\beta \lt[  L(\phi, \dot \psi) 
++ \dot \psi ( i \dot \phi - \dot \psi )
+\rt] d^4x \rt\}  D\phi D\dot \psi \\
+= {}&
+\int \exp \lt\{ \int^\beta \lt[  
+\half \dot \psi^2 - \half (\grad \phi)^2 
+- \half m^2 \phi^2 
++ \dot \psi ( i \dot \phi - \dot \psi )
+\rt] d^4x \rt\}  D\phi D\dot \psi \\
+= {}&
+\int \exp \lt\{ \int^\beta \lt[ {} 
+- \half \left( \dot \psi - i \dot \phi \right)^2
+- \half \dot \phi^2 
+- \half (\grad \phi)^2 
+- \half m^2 \phi^2 
+\rt] d^4x \rt\}  D\phi D\dot \psi \\
+= {}&
+\int \exp \lt\{ \int^\beta \lt[ {} - \half \dot \phi^2
+- \half (\grad \phi)^2 
+- \half m^2 \phi^2 
+\rt] d^4x \rt\}  D\phi \\
+= {}&\int \exp \lt[ {} - \int^\beta \!\!
+L_e(\phi, \dot \phi) \, d^4x \rt]  D\phi 
+\label {free path integral}
+   \end{split}
+\end{equation}
+which is the standard result.
+
+\par
+Our second example is the scalar
+Born-Infeld 
+theory~\cite{Born:1934gh, *Born:1934dia, *Born:1935ap} 
+with action density
+\begin{equation}
+L = {} M^4 \left( 1 - 
+\sqrt{ 1-  M^{-4}
+\lt(\dot \phi^2 
+- (\grad \phi)^2 - m^2 \phi^2 \rt) }  \right)
+\label {Lsqrt}
+\end{equation}
+and conjugate momentum 
+\begin{equation}
+\pi = \frac{\p L(\phi, \dot \phi)}{\p \dot \phi}
+= \frac{\dot \phi}
+{\sqrt{ 1-  M^{-4} \lt(\dot \phi^2 
+- (\grad \phi)^2 - m^2 \phi^2 \rt) }} .
+\end{equation}
+The proposed path integral 
+(\ref {the path integral}) is
+\begin{equation}
+   \begin{split}
+Z(\beta)
+= {}&  \int \exp \lt\{ \int^\beta \lt[  ( i \dot \phi
+- \dot \psi ) \frac{ \p  L(\phi, \dot \psi)  }{ \p \dot \psi }
++ L(\phi, \dot \psi) 
+\rt] d^4x \rt\}  
+\lt| \frac{ \p^2  L(\phi, \dot \psi) }
+{ \p \dot \psi^2  }  \rt|
+ D\phi D\dot\psi
+ \label {first Born-Infeld path integral}
+   \end{split}
+\end{equation}
+in which 
+\begin{equation}
+\frac{ \p  L(\phi, \dot \psi)  }{ \p \dot \psi } = 
+\frac{\dot \psi}
+{\sqrt{ 1-  M^{-4} \lt(\dot \psi^2 
+- (\grad \phi)^2 - m^2 \phi^2 \rt) }}
+\label {first equation to invert}
+\end{equation}
+and 
+\begin{equation}
+\frac{ \p^2  L(\phi, \dot \psi) }{ \p \dot \psi^2  }
+={} \frac{1 + M^{-4}\lt((\grad \phi)^2 + m^2 \phi^2\rt)}
+{\lt[ 1-  M^{-4} \lt(\dot \psi^2 
+- (\grad \phi)^2 - m^2 \phi^2 \rt) \rt]^{3/2} } .
+\label {second equation to invert}
+\end{equation}
+Substituting these formulas into
+(\ref {first Born-Infeld path integral}) gives
+\begin{equation}
+   \begin{split}
+Z(\beta)  
+= {}& \int \exp \Bigg\{ \int^\beta \Bigg[
+\frac{( i \dot \phi - \dot \psi ) \dot \psi}
+{\sqrt{ 1-  M^{-4} \lt(\dot \psi^2 
+- (\grad \phi)^2 - m^2 \phi^2 \rt) } } 
+\\
+{}&  {} + M^4 \left( 1 - 
+\sqrt{ 1-  M^{-4}
+\lt(\dot \psi^2 
+- (\grad \phi)^2 - m^2 \phi^2 \rt) } \right)
+\Bigg] d^4x \Bigg\}  
+\\
+{}& \times
+\frac{1 + M^{-4}\lt((\grad \phi)^2 + m^2 \phi^2\rt)}
+{\lt[ 1-  M^{-4} \lt(\dot \psi^2 
+- (\grad \phi)^2 - m^2 \phi^2 \rt) \rt]^{3/2} }
+\, D\phi D\dot\psi .
+\label {second Born-Infeld path integral}
+   \end{split}
+\end{equation}
+\par
+We can set
+\begin{equation}
+\pi ={} \frac{ \p  L(\phi, \dot \psi)  }{ \p \dot \psi } = 
+\frac{\dot \psi}
+{\sqrt{ 1-  M^{-4} \lt(\dot \psi^2 
+- (\grad \phi)^2 - m^2 \phi^2 \rt) }}
+\label {Setting pi =}
+\end{equation}
+and so absorb the jacobian in
+\begin{equation}
+d\pi ={} \frac{\p \pi}{\p \dot \psi} \, d \dot \psi
+= \frac{ \p^2  L(\phi, \dot \psi) }{ \p \dot \psi^2  } \, d \dot \psi
+={} \frac{1 + M^{-4}\lt((\grad \phi)^2 + m^2 \phi^2\rt)}
+{\lt[ 1-  M^{-4} \lt(\dot \psi^2 
+- (\grad \phi)^2 - m^2 \phi^2 \rt) \rt]^{3/2} } 
+\, d \dot \psi  .
+\label {we have}
+\end{equation}
+The partition function 
+(\ref {second Born-Infeld path integral}) 
+then is
+\begin{equation}
+   \begin{split}
+Z(\beta)  
+= {}& \int \exp \Bigg[ \int^\beta 
+( i \dot \phi - \dot \psi ) \pi
+ + M^4 \left( 1 - 
+\sqrt{ 1-  
+\lt(\dot \psi^2 
+- (\grad \phi)^2 - m^2 \phi^2 \rt)/M^4 } \right)
+d^4x \Bigg]  D\phi D \pi 
+\label {third Born-Infeld path integral}
+   \end{split}
+\end{equation}
+where now \( \dot \psi(\phi,\pi) \) 
+is the function of \( \phi \) and \( \pi \)
+defined by (\ref {Setting pi =})\@.
+\par
+This theory is one of the few 
+in which we can solve Legendre's equation
+(\ref {Setting pi =})
+for the time derivative \( \dot \psi \)
+\begin{equation}
+\dot \psi = \frac{\pi}{\sqrt{1 + M^{-4} \, \pi^2}}
+\sqrt{1 + M^{-4} 
+\lt( (\grad \phi)^2 + m^2 \phi^2 \rt)}  
+\label {dot psi}
+\end{equation}
+and find as the hamiltonian density
+\begin{equation}
+   \begin{split}
+H(\phi,\pi) = {}& \pi \dot \psi - L(\phi, \dot \psi) 
+\\
+={}& \frac{\pi^2\sqrt{1 + M^{-4} 
+\lt( (\grad \phi)^2 + m^2 \phi^2 \rt)}}
+{\sqrt{1 + M^{-4} \, \pi^2}} - M^4
+\\
+{}& + M^4
+\sqrt{ 1-  M^{-4}
+\lt( \frac{\pi^2 \left(1 + M^{-4} 
+\lt( (\grad \phi)^2 + m^2 \phi^2 \rt)\right)}{1 + M^{-4} \, \pi^2}
+- (\grad \phi)^2 - m^2 \phi^2 \rt) } 
+\\
+={}&  \frac{\pi^2\sqrt{M^4 +  (\grad \phi)^2 + m^2 \phi^2 }}
+{\sqrt{M^4 + \pi^2}}
++ M^4 \frac{\sqrt{M^4 + (\grad \phi)^2 + m^2 \phi^2}}
+{\sqrt{M^4 + \pi^2}} - M^4
+\\
+= {}& \sqrt{\lt(M^4 + \pi^2\rt)
+\lt(M^4 + (\grad \phi)^2 + m^2 \phi^2\rt)}  - M^4 .
+\label {H1}
+   \end{split}
+\end{equation}
+Thus for this theory,
+the double path integral
+(\ref {the path integral for the partition function}) is
+\begin{equation}
+   \begin{split}
+Z(\beta)
+={}& \int \exp \lt\{ \int^\beta \lt[ i \dot \phi \pi  {} 
+- \sqrt{\lt(M^4 + \pi^2\rt)\lt(M^4 
++ (\grad \phi)^2 + m^2 \phi^2\rt)} + M^4
+\rt] d^4x \rt\} D\phi D\pi .
+\label {Born-Infeld path integral}
+   \end{split}
+\end{equation}
+
+\par
+Our third example is the theory
+defined by the action density
+\begin{equation}
+L = M^4 \exp( L_0/M^4 )
+\label {exponential action}
+\end{equation}
+in which \( L_0 \) is the action
+density (\ref {free L}) of the free field.
+The derivatives
+of \( L \) are
+\begin{equation}
+\frac{\p L}{\p \dot \psi} = M^{-4} \dot \psi \, L
+\quad \mbox{and} \quad
+\frac{\p^2 L}{\p \dot \psi^2}
+= M^{-4} ( 1 + M^{-4} \dot \psi^2 ) \, L .
+\end{equation}
+So the proposed path integral is
+\begin{equation}
+\begin{split}
+Z(\beta) = {}&
+\int \exp \lt\{ \int^\beta \lt[ L(\phi, \dot \psi) 
++ \frac{ \p  L(\phi, \dot \psi) }{ \p \dot \psi } 
+( i \dot \phi - \dot \psi )
+\rt] d^4x \rt\} 
+\lt| \frac{\p^2 L(\phi, \dot \psi) }
+{\p \dot \psi^2} \rt| 
+D\phi D\dot\psi  \\
+={}& \int \exp \lt\{ \int^\beta   \lt[ 1
++ \frac{ \dot \psi 
+( i \dot \phi - \dot \psi ) }
+{M^4}
+\rt] L(\phi, \dot \psi) \, d^4x \rt\} 
+M^{-4} ( 1 + M^{-4} \dot \psi^2 ) \, L
+ \,
+D\phi D\dot\psi .
+\label {basic path integral pi psi exponential}
+\end{split}
+\end{equation}
+\par
+Our fourth example is 
+the Nambu-Got{\={o}} 
+action density
+\beq
+L = - \frac{T_0}{c}
+\int_0^{\sigma_1}
+\sqrt{ \lt( \dot X \cdot X' \rt)^2
+- \lt( \dot X \rt)^2 \lt( X' \rt)^2 }
+\label {Nambu Goto L}
+\eeq
+in which the tau or time derivatives
+of the coordinate fields \( X^\mu \)
+do not occur quadratically~\cite{CahillXIX}.
+The momenta are
+\beq
+\mathcal{P}^\tau_\mu = 
+\frac{\partial L}
+{\partial \dot X^\mu} =
+- \frac{T_0}{c} 
+\frac{(\dot X \cdot X') X'_\mu 
+- (X')^2 \dot X_\mu}
+{\sqrt{ \lt( \dot X \cdot X' \rt)^2
+- \lt( \dot X \rt)^2 \lt( X' \rt)^2 }}
+\label {Ptaumu}
+\eeq
+and the second derivatives 
+of the Lagrange density are
+\begin{equation}
+   \begin{split}
+\frac{\p^2 L}{\p \dot X^\mu \p \dot X^\nu}
+= {}& \frac{T_0}{c} \lt[
+\frac{\d_{\mu \nu} X'^2 - X'_\mu X'_\nu}
+{ \sqrt{ \lt( \dot X \cdot X' \rt)^2
+- \lt( \dot X \rt)^2 \lt( X' \rt)^2 } } \rt. \\
+{}& \lt.
+- \frac{ \lt( (\dot X \cdot X') X'_\mu 
+- (X')^2 \dot X_\mu \rt)
+\lt( (\dot X \cdot X') X'_\nu 
+- (X')^2 \dot X_\nu \rt) }
+{ \lt[ \lt( \dot X \cdot X' \rt)^2
+- \lt( \dot X \rt)^2 \lt( X' \rt)^2 \rt]^{3/2} }
+\rt]  .
+\label {NG 2d derivatives}
+   \end{split}
+\end{equation}
+The proposed partition function
+(\ref {the path integral}) for
+the Nambu-Got{\={o}} action is then
+\begin{equation}
+   \begin{split}
+Z(\beta) = {}&
+\! \! \int \! \exp \! \lt\{\int^\beta \lt[
+( i \dot X^\mu
+- \dot Y^\mu ) \frac{ \p  L(X, \dot Y) }
+{ \p \dot Y^\mu }
++ L(X, \dot Y) \rt]
+\, d^4x \rt\}   
+\lt| \det \! \lt[ \frac{ \p^2  L(X, \dot Y) }
+{ \p \dot Y^\mu \p \dot Y^\nu }  \rt] \rt|
+DX D\dot Y  
+\label {the path integral with chi's for NG}
+   \end{split}
+\end{equation}
+in which the formulas (\ref {Ptaumu})
+and (\ref {NG 2d derivatives}) 
+(with \( \dot X^\mu \to \dot Y^\mu \)) are to be
+substituted for the first and second
+derivatives of the action density \( L \)
+with respect to the tau derivatives
+\( \dot Y^\mu \)\@.
+
+
+
+\section{The Atlantic City method
+\label {The Atlantic City method}}
+
+Monte Carlos let us estimate the mean values
+of observables weighted by probability 
+distributions~\cite{CahillXIV}.
+They fail when the weight function assumes
+negative or complex values.
+This failure is one aspect of the sign 
+problem~\cite{Behtash:2015loa, *Scorzato:2015qts, *Gattringer:2016kco}\@.
+The double-ratio 
+trick (\ref{observable}--\ref{first probability distribution})
+outlined in the appendix is unreliable.
+\par
+These problems are not hopeless however.
+For although the weight functions 
+of the double path integrals
+(\ref{the path integral for the partition function}) and 
+(\ref {first proposed path integral})
+are complex,
+the integrals of these 
+complex weight functions over 
+the momenta \( \pi \) or over 
+the auxiliary time derivatives \( \dot \psi \)
+are real and positive.
+They are the probability distribution
+that determines the partition function
+and the mean values of observables.
+\par
+If one can't do these
+integrals analytically,
+one can do them numerically.
+These numerical integrations
+are perfectly suited to parallel computation.
+The Atlantic City method of computing
+the partition functions of theories
+with awkward and very awkward actions
+uses parallel computation
+to numerically integrate over 
+the momenta \( \pi \) or over 
+the auxiliary time derivatives \( \dot \psi \)
+in the double path integrals
+(\ref{the path integral for the partition function}) and 
+(\ref {first proposed path integral})\@.
+One then stores the values
+of these integrals in a look-up table.
+One then uses the Monte Carlo
+method guided by the
+stored integrals 
+to estimate the partition function.
+\par
+Our main goal is
+to use the Atlantic City method
+to study the ground states
+of field theories, but 
+for simplicity in this paper
+we will explain and test it in the context 
+of quantum mechanics.
+\par
+Suppose the action is awkward,
+but not very awkward.  
+In this case, we know the hamiltonian
+\( H(q,p) \) but can't integrate analytically
+over the momentum \( p \)\@.
+Then the partition function \( Z(\beta) \) is
+\begin{equation} 
+   \begin{split}
+ Z(\beta) ={}& \tr \, e^{-\beta H} 
+=  \int \exp\left\{ \int_0^\beta \left[ i \dot q p - H(q,p) \right] dt \right\}
+Dp Dq .
+ \label {The partition function then is}
+    \end{split}
+\end{equation}
+We use the approximation
+\begin{equation}
+\begin{split}
+\la q_{\ell+1} | e^{-a H(q, p)} | q_\ell \ra
+\approx {}& 
+\la q_{\ell+1} | e^{-a H(q_{\ell+1}, p)/2} 
+\int dp |p\ra \la p |  e^{-a H(q_\ell, p)/2} | q_\ell \ra
+\\
+= {}& 
+\int_{-\infty}^\infty \frac{dp}{\sqrt{2\pi}} \,
+\exp \left[i (q_{\ell+1} - q_\ell) p \, 
+- a \, \left( H(q_{\ell+1}, p) + H(q_\ell, p) \right)/2\right] 
+\label {using the approximation}
+\end{split}
+\end{equation}
+to estimate the partition function as
+the multiple integral
+\begin{equation}
+\begin{split}
+Z(\beta)={}& \prod_{j=1}^{n} \int \frac{dp_j dq_j}{2\pi} 
+ \exp \left[  i (q_{j+1} - q_j) p_j 
+ - a H(q_{j+1},p_j)/2 - a H(q_j,p_j)/2 \right]   
+ \label {The partition function then is}
+    \end{split}
+\end{equation}
+in which \( n = \beta/a \) and \( q_n = q_0 \)\@.
+
+
+
+We know that 
+\begin{equation}   
+P[q,\beta] = {} \int \exp
+\left\{ \int_0^\beta \left[ i \dot q p - H(q,p) \right] dt \right\}
+Dp
+\label {We know that }
+\end{equation}
+is a functional probability distribution
+that assigns a number \( P[q, \beta] \)
+to every path \( q(t) \)\@.
+It is the limit as \( n \to \infty \) and \(  a =\beta/n \to 0 \)
+of the multiple integral
+\begin{equation}   
+P_n[q,\beta] ={} \prod_{j=1}^n \int\frac{dp_j }{\sqrt{2\pi}} 
+ \exp \left[  i (q_{j+1} - q_j) p_j 
+ - a H(q_{j+1},p_j)/2 - a H(q_j,p_j)/2 \right] .
+ \label {In the limit }
+\end{equation}
+If the hamiltonian is even in the momentum,
+then the probability distribution is real
+\begin{equation}   
+P_n[q,\beta] ={} \prod_{j=1}^n \int\frac{dp_j }{\sqrt{2\pi}} 
+ \cos((q_{j+1} - q_j) p_j) 
+ e^{-a H(q_{j+1},p_j)/2 -a H(q_j,p_j)/2} .
+ \label {P when H is p even}
+\end{equation}
+The partition function \( Z(\beta) \) is
+\begin{equation}
+   \begin{split}
+      Z(\beta) = {}&  \int P[q, \beta] \, Dq
+     = {} \int \prod_{j=1}^n \frac{dq_j}{\sqrt{2\pi}} \,
+      P_n[q,\beta] .
+  \label {I hope The partition function is}   
+   \end{split}
+\end{equation}
+The mean value of the energy 
+at inverse temperature \( \beta \) is
+\begin{equation}
+   \begin{split}
+\la H \ra_\beta ={}
+\frac{\tr \, H \, e^{- \beta H}} {\tr \, e^{- \beta H}}  
+={}& - \frac{1}{Z(\beta)} \frac{d Z(\beta)}{d \beta}
+= - \frac{1}{Z(\beta)} \int \prod_{j=1}^n \frac{dq_j}{\sqrt{2\pi}} \,
+\frac{d P_n[q,\beta] }{d \beta} .
+\label {mean value of the energy at beta}
+   \end{split}
+\end{equation}
+The derivative of the probability distribution 
+with respect to \( \beta = n \, a \) is
+\begin{equation}
+ \begin{split}
+{} - \frac{d  P_n[q,\beta] }{d \beta}
+={}& \frac{1}{n} \sum_{k=1}^n 
+\int \prod_{j=1}^n \frac{dp_j }{\sqrt{2\pi}} \, H(q_k,p_k) 
+\, e^{ i (q_{j+1} - q_j) p_j - a H(q_{j+1},p_j)/2
+ - a H(q_j,p_j)/2 } .
+   \end{split}
+\end{equation}
+So the mean value of the hamiltonian 
+at inverse temperature \( \beta \) is
+\begin{equation}
+   \begin{split}
+\la H \ra_\beta ={}& 
+\frac{1}{n} \sum_{k=1}^n 
+\int \prod_{j=1}^n dq_j \, dp_j \,
+\, H(q_k,p_k) 
+\, e^{ i (q_{j+1} - q_j) p_j  - a H(q_{j+1},p_j)/2
+ - a H(q_j,p_j)/2 }
+\\
+{}& \left/ \int \prod_{j=1}^n  
+dq_j \, dp_j \,
+e^{ i (q_{j+1} - q_j) p_j  - a H(q_{j+1},p_j)/2
+ - a H(q_j,p_j)/2 } \right. .
+ \label {maybe big eq for E0}
+   \end{split}
+\end{equation}
+\par
+In the Atlantic City method,
+one does the \( p \) integrations numerically, setting
+\begin{equation}
+\begin{split}
+A(q_{\ell+1}, q_\ell) 
+= \int_{-\infty}^\infty \frac{dp}{\sqrt{2\pi}} \,
+\exp \left[i (q_{\ell+1} - q_\ell) p \, 
+- a \, \left( H(q_{\ell+1}, p) + H(q_\ell, p) \right)/2\right] 
+\label {integration numerically, we define}
+\end{split}
+\end{equation}
+and
+\begin{equation}
+C(q_{\ell+1},q_\ell) = {}  \int_{-\infty}^\infty 
+\frac{dp}{\sqrt{2\pi}} \,
+H(q_\ell, p) \,
+\exp \left[i (q_{\ell+1} - q_\ell) p \, 
+- a \, \left( H(q_{\ell+1}, p) + H(q_\ell, p) \right)/2 \right] .
+\label {C(q',q)}
+\end{equation}
+In most problems of interest,
+the hamiltonian is an even function
+of the momentum, \( H(q,-p) = H(q,p) \),
+and the integrals 
+(\ref {integration numerically, we define} \&
+\ref {C(q',q)}) are real
+\begin{equation}
+\begin{split}
+A(q_{\ell+1}, q_\ell) = {} & \sqrt{\frac{2}{\pi}}
+\int_0^\infty dp \,
+\cos \left[(q_{\ell+1} - q_\ell) \, p \right] \,
+e^{- a \, \left( H(q_{\ell+1}, p) + H(q_\ell, p) \right)/2 } 
+\\
+C(q_{\ell+1}, q_\ell) = {} & \sqrt{\frac{2}{\pi}}
+\int_0^\infty dp \, H(q_\ell, p) \,
+\cos \left[ (q_{\ell+1} - q_\ell) \, p \right] \,
+e^{- a \, \left( H(q_{\ell+1}, p) + H(q_\ell, p) \right)/2 }  .
+\label {and the integrals are real}
+\end{split}
+\end{equation}
+
+In terms of these numerical integrals,
+the mean value of the hamiltonian is
+\begin{equation}
+   \begin{split}
+\la H \ra_\beta ={}&
+   \frac{1}{n} \sum_{k=1}^n 
+\int dq_k \prod_{j=1, \, j \ne k}^n \! dq_j  \,
+C(q_{k+1}, q_k) \, A(q_{j+1},q_j)  
+ \left/ \int \prod_{j=1}^n  
+dq_j \, A(q_{j+1},q_j) \right. 
+ \label {medium eq for E0}
+   \end{split}
+\end{equation}
+which we may write as
+\begin{equation}
+   \begin{split}
+\la H \ra_\beta ={}&
+   \frac{1}{n} \sum_{k=1}^n \int 
+   \prod_{j=1}^n \! dq_j  \,
+\frac{C(q_{k+1}, q_k)}{  A(q_{k+1},q_k) }
+\, A(q_{j+1},q_j) 
+ \left/ \int \prod_{j=1}^n  
+dq_j \, A(q_{j+1},q_j) \right. .
+ \label {medium eq for E0}
+   \end{split}
+\end{equation}
+We do a Monte Carlo over the 
+probability distribution
+\begin{equation}
+P(q) ={} \left.
+\prod_{j=1}^n  A(q_{j+1},q_j) 
+\right/ \int \prod_{j=1}^n  
+dq_j \, A(q_{j+1},q_j) 
+\label {a Monte Carlo over the probability distribution}
+\end{equation}
+and measure the ratio
+\begin{equation}
+\la H \ra_\beta ={}
+\left\la \frac{1}{n} \sum_{k=1}^n 
+\frac{C(q_{k+1}, q_k)}{  A(q_{k+1},q_k) }
+\right\ra = \int \frac{1}{n} \sum_{k=1}^n 
+\frac{C(q_{k+1}, q_k)}{  A(q_{k+1},q_k) }
+\, P(q) \, Dq .
+\label {and measure} 
+\end{equation}
+\par
+The probability distribution \( P[q, \beta] \) is positive.
+For instance, the quantity
+\begin{equation} 
+   \begin{split}
+ \la q^2(t) \ra ={}& \tr \, e^{-(\beta - t) H } q^2 e^{-t H} 
+ = \int q^2(t) P[q,\beta] \, Dq
+     \end{split}
+\end{equation}
+is positive for every \( t \) and every 
+path \( q(t) \)\@.
+In fact, the value \( A(q_{\ell + 1}, q_\ell) \) 
+of the integral (\ref{and the integrals are real})
+is positive as shown in 
+Appendix\,\ref{Positivity}\@.
+\par
+To take a Metropolis step,  
+we pick a new \( q'_j \)
+and look up the value of the
+probability distribution
+\begin{equation}
+P(q'_j)={}
+ A(q_{j+1}, q'_j) \, A(q'_{j}, q_{j-1}) .
+ \label {probability distribution 1}
+\end{equation}
+In general, the random points \( q_{j+1} \),
+\( q'_j \), and \( q_{j-1} \) will not be among
+the \( q_j \)'s in our tables.
+If the value \( q_{j+1} \) falls
+between the values
+\( q_{j+1,+} \) and \( q_{j+1, -} \),
+and the value \( q'_j \) falls
+between the values
+\( q_{j+} \) and \( q_{j-} \),
+then we use a bilinear interpolation, setting
+\begin{equation}
+\begin{split}
+\rho(q_{j+1}) = \frac{q_{j+1} - q_{j+1, -}}{q_{j+1,+} - q_{j+1, -} } 
+\quad\mbox{and}\quad
+\rho(q'_j) = \frac{q'_j - q_{j-}}{q_{j+} - q_{j-}} 
+\label {setting}
+\end{split}
+\end{equation}
+so that
+\begin{equation}
+   \begin{split}
+A(q_{j+1}, q'_j) = {} & \rho(q'_j)  A(q_{j+1}, q_{j+})
++ \left[ 1 - \rho(q'_j) \right] A(q_{j+1}, q_{j-}) 
+\\
+= {}& \rho(q'_j) 
+\left\{ \rho(q_{j+1}) 
+A(q_{j+1,+}, q_{j+}) + \left[ 1 - \rho(q_{j+1}) \right]
+A(q_{j+1,-}, q_{j+}) \right\}
+\\
++{}& \left[ 1 - \rho(q'_j) \right]
+\left\{ \rho(q_{j+1})
+A(q_{j+1,+}, q_{j-}) +
+\left[ 1 - \rho(q_{j+1}) \right]
+A(q_{j+1,-}, q_{j-}) \right\}  
+\label {we interpolate and use the value}
+   \end{split}
+\end{equation}
+with a similar bilinear interpolation for \( A(q'_{j}, q_{j-1}) \)\@.
+\par
+If \( P(q'_j) \ge P(q_j) \), then we accept
+the new  \( q'_j \)\@.
+If \( P(q'_j) < P(q_j) \), then we 
+accept the new  \( q'_j \) with probability
+\begin{equation}
+P(q_j \to q'_j) = P(q_j')/P(q_j) .
+ \label {probability distribution 2}
+\end{equation}
+
+\section{Application of the Atlantic City method to the  Born-Infeld oscillator
+\label {Application of the Atlantic City method to the 
+Born-Infeld oscillator}}
+
+In this section we demonstrate
+and test our Atlantic City model
+on a theory with an awkward action,
+the quantum-mechanical version of
+the scalar Born-Infeld model
+(\ref {Lsqrt}--\ref {Born-Infeld path integral})\@.
+The lagrangian of this model is
+\begin{equation}
+L = {} Mc^2 - Mc^2 \left[ 1 - \frac{m}{Mc^2} 
+\left( \dot q^2 - \omega^2 q^2 \right) \right]^{1/2} .
+\label {Born-Infeld qm L}
+\end{equation}
+The momentum is
+\begin{equation}
+p ={} \frac{m \dot q}
+{\sqrt{1 - m\left( \dot q^2 - \omega^2 q^2 \right)/(Mc^2) }} ,
+\label {The momentum is}
+\end{equation}
+and the velocity is
+\begin{equation}
+\dot q ={} \frac{p}{m} \frac{\sqrt{1 + m \omega^2 q^2 /Mc^2}}
+{\sqrt{1 + p^2/(mMc^2)}} .
+\label {velocity}
+\end{equation}
+The hamiltonian of the Born-Infeld 
+oscillator is
+\begin{equation}
+H ={} \sqrt{ \left( p^2/m + Mc^2 \right) \,\,
+\left( Mc^2 + m \omega^2 q^2 \right) } - Mc^2 .
+\label {Born-Infeld hamiltonian}
+\end{equation}
+In terms of the hamiltonian
+\( H_0 = p^2/2m + m \omega^2 q^2/2 \)
+of the harmonic oscillator,
+the hamiltonian \( H \) of the Born-Infeld 
+oscillator in the limit \( M/m \gg 1 \) is
+\begin{equation}
+   \begin{split}
+H ={}& H_0 - \frac{1}{8Mc^2} 
+ \left(\frac{p^2}{2m} - \frac{m\omega^2 q^2}{2} \right)^2
+ \left( 1 - \frac{H_0}{Mc^2} \right) + \dots
+\label {When M >> m, the first few terms of the hamiltonian}
+   \end{split}
+\end{equation}
+and
+\begin{equation}
+H={} \sqrt{Mc^2m\omega^2q^2}
+\Big[1+\frac{p^2}{2mMc^2} -  \frac{p^4}{8(mMc^2)^2} \Big]
+\Big[1 + \frac{Mc^2}{2m\omega^2 q^2} - \frac{(Mc^2)^2}{32(m\omega^2q^2)^2} \Big] + \dots
+\end{equation}
+for \( M/m \ll 1 \)\@.
+The energy levels of the Born-Infeld oscillator, 
+like those of the harmonic oscillator, 
+are independent of the mass \( m \)
+due to a symmetry that the
+change of variables to
+\( q' = q \sqrt{m} \) and \( p' = p/\sqrt{m} \)
+reveals.
+\par
+With \( \hbar = c = 1 \) and \( \beta = n \, a \),
+the partition function is 
+\begin{equation} 
+   \begin{split}
+ Z(\beta) ={}& \tr \, e^{-\beta H} 
+=  \int \exp\left\{ \int_0^\beta \left[ i \dot q p - H(q,p) \right] dt \right\}
+Dp Dq 
+\\
+\approx{}& \prod_{j=1}^n \int\frac{dp_j dq_j}{2\pi} 
+ \exp \left[   i (q_{j+1} - q_j) p_j 
+ - a H(q_{j+1},p_j)/2 - a H(q_j,p_j)/2 \right]  
+ \\
+\approx{}& \prod_{j=1}^n \int\frac{dp_j dq_j}{2\pi} 
+ \exp \left[   i (q_{j+1} - q_j) p_j 
+ - \frac{a}{2} \left(\sqrt{p^2_j/m + M} \,\,
+\sqrt{M + m \omega^2 q^2_{j+1}} - M\right) \right.
+\\
+{}& \left. - \frac{a}{2} \left(\sqrt{p^2_j/m + M} \,\,
+\sqrt{M + m \omega^2 q^2_j} - M\right)
+ \right]  .
+ \label {B-I partition function}
+   \end{split}
+\end{equation}
+\par
+In terms of the variables to 
+\( q' = q \sqrt{m} \) and \( p' = p/\sqrt{m} \),
+which satisfy the commutation relation
+\( [ q', p' ] = i \), the Born-Infeld hamiltonian
+(\ref {Born-Infeld hamiltonian}) is
+\begin{equation}
+H ={} \sqrt{ \left( p'^2 + M \right) \,\,
+\left( M + \omega^2 q'^2 \right) } - M ,
+\label {Born-Infeld hamiltonian reveals}
+\end{equation}
+which shows that the energy levels
+are independent of the mass parameter \( m \)\@.
+To simplify our notation and expose the actual
+dependence of these energies, we change
+variables again to 
+\( p' = \sqrt{M} p'' \),
+\( q' =  \sqrt{M} q'' / \omega \),
+and  \( a' = a M \)\@.
+After we drop all the primes,
+we have
+\begin{equation}
+H ={} M \left[ \sqrt{ \left( p^2 + 1 \right) \,\,
+\left( q^2 + 1 \right) } - 1 \right] ,
+\label {Born-Infeld hamiltonian revealed again}
+\end{equation}
+and
+\begin{equation} 
+   \begin{split}
+ Z(\beta) \approx {}& \prod_{j=1}^n \int
+ \frac{Mdp_j dq_j}{2\pi \omega} 
+ \exp \left\{  \left[
+ i \frac{M}{\omega} (q_{j+1} - q_j) p_j 
+- \frac{a}{2} \left(\sqrt{\left(p^2_j + 1 \right) 
+\left( q^2_{j+1} + 1\right)} - 1\right) \right. \right.
+\\
+{}& \left. \left. 
+- \frac{a}{2} \left(\sqrt{\left(p^2_j + 1 \right) 
+\left( q^2_j + 1\right)} - 1\right) \right]
+ \right\}  .
+ \label {B-I partition function}
+   \end{split}
+\end{equation}
+The mean value of the hamiltonian 
+at inverse temperature \( \beta = n a \) is
+\begin{equation} 
+   \begin{split}
+\la H \ra_\beta ={}& - \frac{\tr \, H \, e^{- \beta H}} {\tr \, e^{- \beta H}}  
+= {} - \frac{1}{Z(\beta)} \frac{d Z(\beta)}{d \beta}
+= {} - \frac{M}{n \, Z(\beta)} \frac{d Z(\beta)}{d a} .
+\label {mean value of the hamiltonian }
+   \end{split}
+\end{equation}
+\par
+The energy \( \la H \ra_\beta \)
+is a function of the ratio \( M/\omega \)
+and is proportional to \( M \) 
+\begin{equation} 
+   \begin{split}
+\la H \ra_\beta= {}& 
+\prod_{j=1}^n \int dp_j dq_j 
+\left[ \frac{M}{2n}\sum_{\ell=0}^n  
+\sqrt{p^2_\ell + 1}
+\left(\sqrt{q^2_{\ell+1} + 1} +
+\sqrt{ q^2_\ell + 1} - 2\right)
+\right]
+\\
+{}& \times 
+\exp \left[ 
+ i \frac{M}{\omega} (q_{j+1} - q_j) p_j 
+- \frac{a}{2} \sqrt{p^2_j + 1}
+\left( \sqrt{q^2_{j+1} + 1}
++ \sqrt{q^2_j + 1} \right) + a  
+ \right]
+ \\
+ {}& \left/
+\prod_{j=1}^n \int \! dp_j dq_j
+\exp \left[ i \frac{M}{\omega} (q_{j+1} - q_j) p_j 
+- \frac{a}{2} \sqrt{p^2_j + 1}
+\left( \sqrt{q^2_{j+1} + 1}
++ \sqrt{q^2_j + 1} \right) + a
+ \right] \right. .
+ \label {B-I partition function}
+   \end{split}
+\end{equation}
+The ground-state energy is the limit 
+of the ratio as \( \beta \to \infty \)
+and \( a \to 0 \)\@.
+\par
+We wrote Fortran90 codes to compute
+in parallel the momentum integrals
+\begin{equation}
+   \begin{split}
+A(q_{\ell+1}, q_\ell) ={}& 
+\int_0^\infty \! dp 
+\cos \left[ \frac{M}{\omega}(q_{\ell+1} - q_\ell) p \right]
+\exp \left[   
+ - \frac{a}{2} \sqrt{p^2 + 1} 
+ \left( \sqrt{ q^2_{\ell+1} + 1} +
+\sqrt{ q^2_\ell + 1} \right) + a
+ \right]
+\label {Our first numerical integral is}
+   \end{split}
+\end{equation}
+and
+\begin{equation}
+   \begin{split}
+      C(q_{\ell+1}, q_\ell) = {}&
+     M \int_0^\infty \! dp \sqrt{p^2 + 1}
+\left(\thalf \sqrt{ q^2_{\ell+1} + 1 } +
+\thalf \sqrt{q^2_\ell + 1} - 1 \right)
+\\ 
+{}& \times      
+\cos \left[ \frac{M}{\omega}(q_{\ell+1} - q_\ell) p \right]
+\exp \left[   
+ - \frac{a}{2} \sqrt{p^2 + 1} 
+ \left( \sqrt{ q^2_{\ell+1} + 1} +
+\sqrt{ q^2_\ell + 1} \right) + a
+ \right]
+\label {Our second numerical integral is}
+         \end{split}
+\end{equation}
+for suitably large sets of values of \( q_\ell \)
+and \( q_{\ell + 1} \)
+and stored them in look-up tables.
+We then used the look-up tables
+in a generic Monte Carlo
+with the Metropolis step 
+(\ref {probability distribution 1}--\ref 
+{probability distribution 2}) 
+to estimate the mean value
+of the hamiltonian at inverse temperature \( \beta \)
+\begin{equation}
+\la H \ra_\beta ={}
+\left\la \frac{1}{n} \sum_{k=1}^n 
+\frac{C(q_{k+1}, q_k)}{  A(q_{k+1},q_k) }
+\right\ra = \int \frac{1}{n} \sum_{k=1}^n 
+\frac{C(q_{k+1}, q_k)}{  A(q_{k+1},q_k) }
+\, P_n[q,\beta] \, Dq 
+\label {and measure} 
+\end{equation}
+in which the unnormalized probability
+distribution is
+\begin{equation}
+P_n(q,\beta) ={} \prod_{\ell=1}^n A(q_{\ell + 1}, q_\ell) 
+\label {un-normalized probability}
+\end{equation}
+and \( q_{n+1} \equiv q_1 \)\@.
+\par
+The Monte Carlo codes run fast;
+all the work is in the look-up tables. 
+We made look-up
+tables for \( 0.1 \le Mc^2/(\hbar \omega) \le 10 \)\@.
+We plotted our Atlantic City   
+(\ref {Our first numerical integral is}--\ref {and measure})
+estimates of the ground-state
+energy of the Born-Infeld oscillator
+as blue dots
+in Fig.\,\ref{Born-Infeld big masses}
+and listed them in Table\,\ref{bigMasses}\@.
+The statistical errors are smaller
+than the dots.
+\par
+To test these results,
+we used Matlab to compute the exact eigenvalues
+of the Born-Infeld oscillator.
+In terms of the harmonic-oscillator variables
+\begin{equation}
+a ={} \sqrt{\frac{m \omega}{2}} 
+\left( q + \frac{i p}{m \omega} \right)
+\quad \mbox{and} \quad
+a^\dagger ={} \sqrt{\frac{m \omega}{2}} 
+\left( q - \frac{i p}{m \omega} \right) ,
+\label {harmonic-oscillator variables}
+\end{equation}
+the operators \( q \) and \( p \) are
+\( q = \left( a^\dagger + a \right)/\sqrt{2 m \omega} \)
+and \( p = i \sqrt{m \omega/2} \left( a^\dagger - a \right) \),
+and so
+the hamiltonian
+(\ref {Born-Infeld hamiltonian}) is
+\begin{equation}
+H ={} \sqrt{Mc^2 - \frac{\omega}{2}
+\left( a^\dagger - a \right)^2}
+\sqrt{Mc^2 + \frac{\omega}{2} 
+\left( a^\dagger + a \right)^2} - Mc^2 
+\label {Born-Infeld hamiltonian a a'}
+\end{equation}
+in which the mass \( m \) does
+not appear.
+We made a \(1000 \times 1000\) matrix
+\( a \) as diag(sqrt([1:Nmax]),1) with Nmax = 1000
+and \( a^\dagger \) as its transpose.
+The Matlab command eig(sqrtm(H))
+then gave the exact energy eigenvalues,
+which generated the
+red curves in the figures and the exact
+results in the tables.
+
+
+\par
+\begin{table}[h]
+\caption{Exact (Matlab) and 
+Atlantic City  results 
+(\ref {Our first numerical integral is}--\ref {and measure})
+for the ground-state energy \( E_0/(\hbar \omega) \) 
+of the Born-Infeld hamiltonian
+(\ref{Born-Infeld hamiltonian})
+for \( 0.1 \le Mc^2/(\hbar \omega) \le 10 \)\@.}
+\begin{center}
+%\begin{ruledtabular}
+\begin{tabular}{|c|c|c|}
+\hline
+\( Mc^2/(\hbar \omega) \)& \( E_0/(\hbar \omega) \) exact 
+& \(E_0/(\hbar \omega)\)  Atlantic City \\
+\hline
+0.1&0.1881&0.1759\\
+\hline
+0.5&0.3155&0.3191\\
+\hline
+1.0&0.3702&0.3746\\
+\hline
+2.5&0.4288&0.4308\\
+\hline
+5.0&0.4587&0.4603\\
+\hline
+7.5&0.4708&0.4723\\
+\hline
+10.0&0.4774&0.4781\\
+\hline
+\end{tabular}
+%\end{ruledtabular}
+\end{center}
+\label {bigMasses}
+\end{table}
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=\textwidth]{BIplot1.eps}
+\caption{Our Atlantic City  estimates 
+(\ref {Our first numerical integral is}--\ref {and measure}, blue dots) 
+of the ground-state energies \( E_0/(\hbar \omega) \)
+of the Born-Infeld oscillator are plotted along 
+with the exact values (Matlab, red curve) 
+for \( 0.1 \le Mc^2/(\hbar \omega) \le 10 \)\@.}
+\label {Born-Infeld big masses}
+\end{center}
+\end{figure}
+
+
+
+
+
+
+\section{The Atlantic City model applied to a very awkward action
+\label{The Atlantic City model applied to a very awkward action}}
+
+In this section,
+we test our Atlantic City method
+by using it to find the 
+ground-state energy 
+of the Born-Infeld oscillator
+considered 
+as a theory with a very awkward action.
+That is, we pretend that
+we don't know the Born-Infeld hamiltonian 
+(\ref {Born-Infeld hamiltonian})
+and use our Atlantic City method to
+evaluate the complex path integral
+(\ref {first proposed path integral})
+for its partition function.
+So instead of the partition function
+(\ref {B-I partition function}),
+we have the partition function 
+\begin{equation}
+   \begin{split}
+Z(\beta) ={}& \int \exp \lt\{ \int^\beta \lt[  ( i \dot q
+- \dot s ) \frac{ \p  L(q, \dot s)  }{ \p \dot s }
++ L(q, \dot s) 
+\rt] dt \rt\}  
+\lt| \frac{ \p^2  L(q, \dot s) }
+{ \p \dot s^2  }  \rt|
+ Dq D\dot s
+\\
+={}& \int \exp\left\{
+\int^\beta \left[
+\frac{m i\dot q \dot s - m\omega^2 q^2 -M}
+{\sqrt{1 - m \left( \dot s^2 - \omega^2 q^2 \right)/M}}
++ M \right] \, dt \right\}
+\\
+{}& \times \, \frac{m + m^2 \omega^2 q^2/M}
+{\left[ 1 - 
+m \left( \dot s ^2 - \omega^2 q^2 \right)/M\right]^{3/2}}
+\, Dq D\dot s .
+\label {instead of the partition function}
+   \end{split}
+\end{equation}
+Sending \( q_j \to \sqrt{M/m} \, q_j/\omega \) and
+\( \dot s_j \to \sqrt{M/m} \, \dot s_j \), 
+we can write \( Z(\beta)  \) as
+\begin{equation}
+   \begin{split}
+Z(\beta) ={}& \int \exp\left\{
+\int^\beta \left[ 
+\frac{i (M/\omega) \dot q \dot s - M q^2 - M}
+{\sqrt{1 + q^2 - \dot s^2}}
++ M \right] \, dt \right\}
+\frac{1 + q^2}
+{\left[ 1 + q^2 - \dot s ^2 \right]^{3/2}}
+\frac{M}{\omega} Dq D\dot s .
+\label {we can write Z(beta) as}
+   \end{split}
+\end{equation}
+\par
+Sending \( dt = a \to a/M \),
+we approximate this path integral 
+on an \( n \by n \) lattice
+of lattice spacing \( a = \beta/n \)
+as the multiple integral
+\begin{equation}
+   \begin{split}
+Z(\beta) ={}& \prod_{j=1}^n \int 
+\frac{M d\dot s_j dq_j}{2\pi \omega} 
+\exp  \left[ 
+i \frac{M}{\omega} \left(
+\frac{q_{j + 1} \dot s_j}
+{\sqrt{1 + q^2_{j+1} - \dot s^2_j }}
+- \frac{q_j  \dot s_j }
+{\sqrt{1 + q^2_j - \dot s^2_j }} \right) \right.
+\\
+{}& \left.
+- \frac{a}{2}\left(
+\frac{q^2_{j+1} + 1}{\sqrt{1 + q^2_{j+1} - \dot s^2_j }}
++
+\frac{q^2_j + 1}{\sqrt{1 + q^2_j - \dot s^2_j }} \right) 
++ a \right] 
+\\
+{}&\quad \times \, \frac{\sqrt{1 +  q^2_{j+1}}}
+{\left[ 1 + q^2_{j+1} - \dot s ^2_j \right]^{3/4}}
+\frac{\sqrt{1 +  q^2_j}}
+{\left[ 1 + q^2_j - \dot s ^2_j \right]^{3/4}} .
+\label {We approximate this path integral}
+   \end{split}
+\end{equation}
+\par
+Apart from the phase factor, the integrand
+is even in \( \dot s \)\@.
+We numerically compute the integrals
+\begin{equation}
+   \begin{split}
+   A(q_{j+1}, q_j) ={}& \int_0^{S_j} \!\! d\dot s \,
+\cos \left[ 
+i \frac{M}{\omega} \left(
+\frac{q_{j + 1} \dot s_j}
+{\sqrt{1 + q^2_{j+1} - \dot s^2_j }}
+- \frac{q_j  \dot s_j }
+{\sqrt{1 + q^2_j - \dot s^2_j }} \right) \right]
+\\
+\times {}& \exp \left[
+- \frac{a}{2}\left(
+\frac{q^2_{j+1} + 1}{\sqrt{1 + q^2_{j+1} - \dot s^2_j }}
++
+\frac{q^2_j + 1}{\sqrt{1 + q^2_j - \dot s^2_j }} \right) 
++ a \right] 
+\\
+{}&\quad \times \, \frac{\sqrt{1 +  q^2_{j+1}}}
+{\left[ 1 + q^2_{j+1} - \dot s ^2_j \right]^{3/4}}
+\frac{\sqrt{1 +  q^2_j}}
+{\left[ 1 + q^2_j - \dot s ^2_j \right]^{3/4}}
+\label {I L}
+   \end{split}
+\end{equation}
+and
+\begin{equation}
+   \begin{split}
+   C(q_{j+1}, q_j) ={}& M \int_0^{S_j} \!\! d\dot s \,
+   \left[
+   \frac{q^2_{j+1} + 1}{2\sqrt{1 + q^2_{j+1} - \dot s^2_j }}
++
+\frac{q^2_j + 1}{2\sqrt{1 + q^2_j - \dot s^2_j }}
+- 1    \right]
+   \\
+{}&   \times
+\cos \left[ 
+i \frac{M}{\omega} \left(
+\frac{q_{j + 1} \dot s_j}
+{\sqrt{1 + q^2_{j+1} - \dot s^2_j }}
+- \frac{q_j  \dot s_j }
+{\sqrt{1 + q^2_j - \dot s^2_j }} \right) \right]
+\\
+\times {}& \exp \left[
+- \frac{a}{2}\left(
+\frac{q^2_{j+1} + 1}{\sqrt{1 + q^2_{j+1} - \dot s^2_j }}
++
+\frac{q^2_j + 1}{\sqrt{1 + q^2_j - \dot s^2_j }} \right) 
++ a \right] 
+\\
+    {}&\quad \times \, \frac{\sqrt{1 +  q^2_{j+1}}}
+{\left[ 1 + q^2_{j+1} - \dot s ^2_j \right]^{3/4}}
+\frac{\sqrt{1 +  q^2_j}}
+{\left[ 1 + q^2_j - \dot s ^2_j \right]^{3/4}}
+\label {HI L}
+   \end{split}
+\end{equation}
+in which \( S_j \) is the lesser of
+\( \sqrt{1 + q^2_{j+1}} \)
+and \( \sqrt{1 + q^2_j} \)\@.
+We do these integrals in parallel
+and store their values in a look-up table.
+We then use the look-up table 
+to estimate the mean value
+\begin{equation}
+\la H \ra_\beta ={}
+\left\la \frac{1}{n} \sum_{k=1}^n 
+\frac{C(q_{k+1}, q_k)}{  A(q_{k+1},q_k) }
+\right\ra  .
+\label {and measure L} 
+\end{equation}
+\par
+We plotted our results as the green dots in 
+Fig.~\ref{very awkward Born-Infeld big masses}
+and listed them in 
+Table~\ref{very awkward bigMasses}\@.
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=\textwidth]{BIplot3.eps}
+\caption{Our Atlantic City  estimates 
+(\ref{I L}--\ref{and measure L}, green dots)
+of the ground-state energies of the 
+Born-Infeld oscillator are plotted along 
+with the exact values (red curve) for 
+\( 0.1 \le Mc^2/(\hbar \omega) \le 10 \)\@.}
+\label {very awkward Born-Infeld big masses}
+\end{center}
+\end{figure}
+
+\par
+\begin{table}[h]
+\caption{Exact (Matlab) and 
+Atlantic City  results 
+(\ref {I L}--\ref{and measure L})
+for the ground-state energies \( E_0/(\hbar \omega) \) 
+of the Born-Infeld oscillator
+(\ref{Born-Infeld hamiltonian})
+for \( 0.3 \le Mc^2/(\hbar \omega) \le 8.75 \)\@.}
+\begin{center}
+%\begin{ruledtabular}
+\begin{tabular}{|c|c|c|}
+\hline
+\( M/(\hbar \omega) \)& \( E_0/(\hbar \omega) \) exact 
+  & \(E_0/(\hbar \omega) \) Atlantic City   \\
+\hline
+0.3&0.2731&0.2915\\
+\hline
+0.75&0.3482&0.3599\\
+\hline
+1.75&0.4084&0.4145\\
+\hline
+3.75&0.4478&0.4502\\
+\hline
+6.25&0.4658&0.4678\\
+\hline
+8.75&0.4746&0.4766\\
+\hline
+\end{tabular}
+%\end{ruledtabular}
+\end{center}
+\label {very awkward bigMasses}
+\end{table}
+
+\section{Summary
+\label{Summary}}
+
+We divide the actions 
+of theories of scalar fields
+into three classes---graceful, 
+awkward, and very awkward.
+An action is graceful if it is quadratic
+in the time derivatives of the fields,
+which then are 
+linearly related to the momenta,
+the fields, and
+their spatial derivatives.
+The partition function is
+a path integral over the fields
+with a positive weight function.
+An action is awkward if it
+is not quadratic
+in the time derivatives of the fields but is simple
+enough for one to find its hamiltonian.
+One typically can't integrate over the momenta,
+and the partition function is a path integral
+over the fields and their momenta
+with a complex weight function.
+An action is very awkward action if 
+the equations for the time derivatives 
+are worse than quartic,
+and one can't find its hamiltonian.
+\par
+We have shown how to write 
+the partition function as a
+euclidian path integral 
+when one doesn't know
+the hamiltonian.
+We also have shown how
+to estimate euclidian path integrals
+that have weight functions 
+that assume negative or complex values.
+In this Atlantic City method,
+one integrates numerically
+over the momenta when the action
+is awkward or over
+auxiliary time derivatives
+when it is very awkward.
+One then stores the values of the integrals
+in a look-up table
+and does a standard 
+Monte Carlo guided by
+the look-up table. 
+The numerical integrations
+are well suited to parallel computation.
+We demonstrated and tested
+this Atlantic City method
+on the Born-Infeld oscillator
+by treating its action both
+as awkward and as very awkward.
+\par
+Theories with graceful actions
+have infinite energy densities. 
+The Atlantic City method lets us
+estimate the energy density
+of theories with awkward
+or very awkward 
+actions, some of which 
+may have finite energy 
+densities\,\cite{Bender1990, *Cahill2013NA, 
+*PhysRevD.88.125014NA}\@.
+It may lead
+to a theory of dark energy. 
+\par 
+Inasmuch as the approximation of multiple
+integrals with integrands
+that assume negative or complex values
+is a long-standing problem 
+in applied mathematics,
+the Atlantic City method
+may have other uses.
+
+
+\begin{acknowledgments}
+Conversations with 
+Sudhakar Prasad, Shashank Shalgar,
+and Daniel Topa
+advanced this work.  
+We did some of the
+numerical computations at 
+the Korea Institute for Advanced Study
+and most of them
+at the  National Energy Research Scientific Computing Center, a DOE Office of Science User Facility supported by the Office of Science of the U.S. Department of Energy under Contract 
+No. DE-AC02-05CH11231.
+\end{acknowledgments}
+
+\appendix
+
+\section{Ratios of complex Monte Carlos are unreliable
+\label {Ratios of complex Monte Carlos are unreliable}}
+
+The mean value of an observable
+\( A[\phi] \) at inverse temperature \( \b \) is
+\begin{equation}
+   \begin{split}    
+\la A[\phi] \ra ={}& \frac{ \tr \, A[\phi] e^{- \b H} }
+{ \tr \, e^{- \b H} } \\
+={}&
+\int A[\phi] \exp \lt[ \int    \lt( i \, \dot \phi_j 
+-  \dot \psi_j \rt) \frac{ \p  L }{ \p \dot \psi_j }  
++ L(\phi, \dot \psi) \, d^4x \rt] 
+{\lt| \det \lt( \frac{ \p^2  L }
+ { \p \dot \psi_k \p \dot \psi_\ell }  \rt) \rt| }
+D\phi D\dot\psi 
+\\
+{}& \lt/ \int \exp \lt[ \int  \lt( i \, \dot \phi_j 
+-  \dot \psi_j \rt) \frac{ \p  L }{ \p \dot \psi_j }  
++ L(\phi, \dot \psi) \, d^4x \rt] 
+{\lt| \det \lt( \frac{ \p^2  L }
+ { \p \dot \psi_k \p \dot \psi_\ell }  \rt) \rt| } 
+ D\phi D\dot\psi \rt. .
+ \label {the mean value}
+\end{split}
+\end{equation} 
+The complex action 
+\begin{equation}
+S = {} \int \lt( i \, \dot \phi_j 
+	-  \dot \psi_j \rt) \frac{ \p  L }{ \p \dot \psi_j }  
+	+ L(\phi, \dot \psi)\, d^4x
+	\label {the complex action}
+\end{equation}
+oscillates and does not give us a probability distribution
+unless we can integrate over $D\dot\psi$\@.
+One can write the mean value (\ref {the mean value})
+as a ratio of mean values
+\begin{equation}
+\begin{split}    
+\la A[\phi] \ra ={}& \lt\la A[\phi]
+\exp \lt[ \int  i \, \dot \phi_j \,
+ \frac{ \p  L }{ \p \dot \psi_j }  \, d^4x \rt]
+\rt\ra
+ \lt / 
+\lt\la 
+\exp \lt[ \int   i \, \dot \phi_j 
+\, \frac{ \p  L }{ \p \dot \psi_j } \, d^4x \rt]
+\rt\ra \rt. \\
+={}& \int A[\phi]
+\exp \lt[ \int  i \, \dot \phi_j \,
+ \frac{ \p  L }{ \p \dot \psi_j }  \, d^4x \rt]
+P(\phi, \dot \psi) D\phi D\dot\psi \\
+{}& \quad \left/ \int \exp \lt[ \int   i \, \dot \phi_j 
+\, \frac{ \p  L }{ \p \dot \psi_j } \, d^4x \rt]
+P(\phi, \dot \psi) \, D\phi D\dot\psi \right.
+\label {observable}
+\end{split}
+\end{equation}
+in which the functional \( P(\phi, \dot \psi) \)
+is a normalized probability distribution
+\begin{equation}
+   \begin{split}
+   P(\phi, \dot \psi) ={}&
+\exp \lt[ \int  \lt( L(\phi, \dot \psi) 
+-  \dot \psi_j  \, \frac{ \p  L }{ \p \dot \psi_j }  \rt)
+ d^4x \rt] 
+\lt| \det \lt( \frac{ \p^2  L }
+ { \p \dot \psi_k \p \dot \psi_\ell }  \rt) \rt|
+\\
+{}& \lt / \int
+ \exp \lt[ \int   \lt( L(\phi, \dot \psi) 
+ -  \dot \psi_j \, \frac{ \p  L }{ \p \dot \psi_j }  \rt)
+  d^4x \rt] 
+\lt| \det \lt( \frac{ \p^2  L }
+ { \p \dot \psi_k \p \dot \psi_\ell }  \rt) \rt|
+ \, D\phi D\dot\psi  \rt. .
+ \label {first probability distribution}
+   \end{split}
+\end{equation}
+\par
+Although in principle one can use
+the Monte Carlo method~\cite{CahillXIV}
+to estimate
+the numerator \( N \) and the denominator \( D \)
+of the ratio (\ref {observable}),
+both \( N \) and  \( D \) are
+the mean values of complex oscillating
+functionals.
+In many if not most cases 
+of interest, both \( N \) and \( D \)
+are smaller than the measurement errors 
+\( \delta N \) and \( \delta D \) 
+in computations of reasonable lengths.
+The error in the observable \( A[\phi] \) is
+\begin{equation}
+\delta \la A[\phi] \ra ={}
+\delta \frac{N}{D} = 
+\frac{ \delta N }{D} - 
+\frac{ N }{ D^2 } \delta D =
+\frac{ \delta N }{D} -  \la A[\phi] \ra
+\frac{ \delta D }{ D } ,
+\label {error in N/D}
+\end{equation}
+and in many cases
+both \( N \) and \( D \) are zero
+in the limit in which \( \beta \to \infty \)\@.
+\par
+For instance, suppose we apply the technique
+(\ref {observable}--\ref {first probability distribution})
+to the computation of the ground-state energy
+\( \la H \ra = N/D \)
+of the harmonic oscillator
+in which the numerator is
+\begin{align} 
+N = {}& \int \left(  \frac{p^2}{2m}
+   + \half m \omega^2 q^2 \right)
+   \exp\left[\int \left( i \dot q p - \frac{p^2}{2m}
+   - \half m \omega^2 q^2 \right) dt \right] Dp Dq \nn\\
+  {}& \left/  \int \exp \left[ \int  \left( - \frac{p^2}{2m}
+   - \half m \omega^2 q^2 \right) dt \right]  Dp Dq \right. ,
+   \label {computation of the numerator}
+\end{align}
+the denominator \( D\) is
+\begin{align} 
+D = {}& \int \exp\left[\int \left( i \dot q p - \frac{p^2}{2m}
+   - \half m \omega^2 q^2 \right) dt \right] Dp Dq \nn\\
+  {}& \left/  \int \exp \left[ \int  \left( - \frac{p^2}{2m}
+   - \half m \omega^2 q^2 \right) dt \right]  Dp Dq \right. ,
+   \label {computation of the denominator}
+\end{align}
+and the measure \( Dp Dq \) is
+\begin{equation}
+Dp Dq = \prod_{j=1}^n \frac{1}{2\pi} dp_j dq_j .
+\label {Dp Dq}
+\end{equation}
+In the continuum limit 
+($n\rightarrow\infty$, $dt\rightarrow 0$, with $\beta = n\:dt$ fixed),
+the numerator \( \mathcal{N} \)
+of the denominator \( D \equiv \mathcal{N} / \mathcal{D} \) 
+of the ratio \( N/D \)
+is the partition function 
+\begin{align}
+\mathcal{N} = {}& Z(\beta) = \tr \, e^{-\beta H} \nn\\
+= {}& \int \exp\left[ \int \left( i \dot q p - \frac{p^2}{2m}
+   - \half m \omega^2 q^2 \right) dt \right] Dp Dq \nn\\
+= {}& \frac{1}{2 \sinh (\beta \omega/2)} ,
+   \label {The numerator of this expression is}
+\end{align}
+and the denominator is
+\begin{align} 
+\mathcal{D} ={}& 
+\int \exp \left[ \int  \left( - \frac{p^2}{2m}
+   - \half m \omega^2 q^2 \right) dt \right]  
+   Dp Dq \nn  \\
+   ={}& \prod_{j=1}^n \int  \frac{dp_j dq_j}{2\pi}
+   \exp \left[ \sum_{j=1}^n \left( - \frac{p^2_j}{2m}
+   - \half m \omega^2 q^2_j \right) \frac{\beta}{n}
+    \right] \nn  \\
+   ={}& \left(\frac{1}{2\pi}\right)^n
+   \left(\frac{2\pi m n}{\beta} \right)^{n/2}
+ \prod_{j=1}^n \int dq_j 
+   \exp \left[ \sum_{j=1}^n  \left( 
+      - \half m \omega^2 q^2_j \right) \frac{\beta}{n}
+       \right] \nn  \\  
+ ={}& \left(\frac{1}{2\pi}\right)^n
+ \left(\frac{2\pi m n}{\beta} \right)^{n/2}   
+\left(\frac{2\pi n}{m \omega^2 \beta} \right)^{n/2}    
+= \left( \frac{n}{\beta \omega} \right)^n  .
+  \end{align}
+This denominator goes to infinity as \( n \to \infty \) and 
+\( \beta/n \to 0 \) for any \( \beta \ne 0 \)\@.
+So the denominator \( D \) vanishes
+\begin{equation}
+D =  \frac{1}{2 \sinh (\beta \omega/2) \, 
+\mathcal{D}} = 0 .
+\label {So the denominator =0}
+\end{equation}
+The numerator also vanishes,
+so the ratio \( \la H \ra = N/D \)
+is hard to estimate, being \( 0 /0 \)\@.
+\par
+In general, the double-ratio method
+(\ref {observable}--\ref {first probability distribution})
+is not a reliable way to estimate the mean value
+of an observable (\ref {the mean value})\@.
+
+\section{Positivity
+\label {Positivity}}
+
+In most problems of interest,
+the hamiltonian increases monotonically
+with the momentum when the momentum
+is positive
+\begin{equation}
+\frac{\p H(q, p)}{\p p} > 0 
+\quad \mbox{when} \quad p > 0 .
+\label {the hamiltonian increases with the momentum}
+\end{equation}
+Thus
+the exponentials \( \exp[ - a \, H(q_{\ell+1}, p)/2 ] \)
+and \( \exp[ - a \, H(q_\ell, p)/2 ] \)
+in the integral \( A(q_{\ell + 1}, q_\ell) \) 
+(\ref {and the integrals are real})
+decrease monotonically with \( p \)
+for \( p > 0 \)\@.
+Let us divide the domain \( [0, \infty ] \)
+of the integration (\ref {and the integrals are real})
+into the successive intervals 
+\begin{equation}
+I_n ={} \left[ \frac{n \pi}{2 | q_{\ell+1} - q_\ell |}, \,
+ \frac{(n + 1)\pi}{2 | q_{\ell+1} - q_\ell |} \right] 
+\label {if one divides the half line}
+\end{equation}
+for \( n = 0, 1, \dots \)\@.
+Because the
+exponentials decrease monotonically
+with \( p \),
+the value  \( A(q_{\ell + 1}, q_\ell) \)
+of the integral (\ref {and the integrals are real})
+over any pair of intervals
+\( I_{4n} \cup I_{4n+1} \) for \( n \ge 0 \)
+is positive.  Invoking monotonicity
+(\ref {the hamiltonian increases with the momentum})
+once again, we see that the integral over 
+any quartet of intervals
+\( I_{4n} \cup I_{4n+1} \cup I_{4n+2} \cup I_{4n+3}\) 
+for \( n \ge 0 \) also is positive. 
+It follows that the value \( A(q_{\ell + 1}, q_\ell) \) 
+of the integral 
+(\ref {integration numerically, we define})
+is positive as long as the hamiltonian is 
+a monotonically increasing, 
+even function of the momentum.
+\par
+\par
+For instance, when \( H \)
+represents a harmonic oscillator
+\begin{equation}
+H ={} \frac{p^2}{2m} + \frac{m \omega^2 q^2}{2},
+\label {H represents a harmonic oscillator}
+\end{equation}
+the integral 
+(\ref {integration numerically, we define})
+is obviously positive
+\begin{equation}
+A(q_{\ell+1}, q_\ell) = {} \sqrt{\frac{m}{a}}
+\, \exp\left\{ {} - a 
+\left[\frac{m (q_{\ell+1} - q_\ell)^2}{2 a^2}
++ \frac{m\omega^2 ( q_{\ell+1}^2 + q_\ell^2)}{4} 
+\right] \right\} .
+\label {the integral is}
+\end{equation}
+\par
+It is a simple matter to
+have one's Monte Carlo code
+report the minimum 
+value of the integral \( A(q_{\ell + 1}, q_\ell) \) 
+(\ref {and the integrals are real})
+and to check that it is positive.
+
+\bibliography{physics}
+
+\end{document}  
+
