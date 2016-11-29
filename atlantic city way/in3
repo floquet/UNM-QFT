@@ -1,0 +1,8 @@
+maxPhi, maxDphi, maxGphi, maxPi
+10.     10.      10.      100.
+Nphi, Ndphi, Ngphi, Npi
+100   100    100    1000
+at, a, Mass, m
+.5  .5  1.0  1.0
+tablename
+table3
