@@ -1,0 +1,10 @@
+maxPhi, maxGphi, maxDphi, maxPi
+20.     20.      20.      1000.
+Nphi, Ngphi, Ndphi, Npi, numproc
+200   200    200    1000000   192
+at, a, Mass, m,  df
+1.0  1.0  1.0  1.0  2.0
+tablename   temp   root, farray, index
+tablem1a1   cold   m1a1  duh     1
+Nsweeps, Ns, Nt
+1000   20  20

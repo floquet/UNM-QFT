@@ -1,0 +1,23 @@
+ maxPhi,    maxGphi,    maxDphi
+      20.000      20.000      20.000
+ Nphi,   Ngphi,    Ndphi
+       200       200       200
+ as,   at,   Mass,   m,   df
+    1.000000    1.000000    1.000000    1.000000    2.200000
+ tablename,     temp,    root,    farray,    index
+tablem1a1 hot m1a1  arraym1a103         4
+ Nsweeps,   Ns,   Nt
+      1000        20        20
+ Results from run                    3
+ E_0 =  0.743064880     sigma =   2.7892885663581482E-005
+ accept ratio =   0.498801738    
+ minimum of A =  -5.2122275540499996E-007
+ maximum of A =   1.8828984939100000     
+ minimum of C =  -143.76250749621005     
+ maximum of C =   198.54473570237366     
+ highphi =   11.940856478750828     
+ highgphi =   21.087273121913572     
+ highdphi =   12.041560244042449     
+ A(highphi,highgphi,highdphi) =   1.7961338116300001E-002
+ minimum A =   1.9106182116999999E-004
+ out of table =   5.0000000000000000     
