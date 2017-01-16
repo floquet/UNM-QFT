@@ -1,0 +1,144 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb,amsmath}
+\usepackage{color}
+\definecolor{mygray}{gray}{0.6}
+% https://tex.stackexchange.com/questions/61015/how-to-use-different-colors-for-different-href-commands
+\usepackage[colorlinks = true,urlcolor = blue,linkcolor = blue]{hyperref}
+
+% https://tex.stackexchange.com/questions/4192/bad-positioning-of-math-accents-for-the-beamer-standard-font
+\newcommand{\pd}[0]				   {\skew{6}{\dot}{\phi}}
+\newcommand{\phidot}[0]      {\pd\left( \pi, M, V \right)}
+\newcommand{\factor}[0]      {M^{12} \pi^{3} \left(3 \sqrt{3} \sqrt{4 M^{12}+27 \pi^{2} \left(M^4+V\right)^2}-27 \pi
+   \left(M^4+V\right)\right)}
+\newcommand{\inv}[0]     {\left( M^{4} + V \right)}
+\newcommand{\littlepiece}[0] {27 \pi \inv} 
+\newcommand{\bigpiece}[0]    {M^{12}\pi^{3} \left( \sqrt{27 \left( 4M^{12} + \littlepiece \right) } - \littlepiece \right)} 
+
+\title{Inverse Scalar Born-Infeld Theory}
+\author{Ground-State Energy Densities}
+%\date{}							% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+\section{Solve for the momentum}
+Start with equation (29):
+  \begin{equation}   %  =   =   =   =   =
+  %\begin{split}
+    \pi = \pd \left[1 - \left( \pd^{2} - V \right)/M^{4} \right]^{-3/2}
+    %\label{eq:}
+  %\end{split}
+  \end{equation}
+%\subsection{}
+where $M\in\mathbb{R}^{+}$, $V\in\mathbb{R}$. Solve for $\phidot$.
+
+Introducing intermediate variables
+  \begin{equation}   %  =   =   =   =   =
+    \begin{split}
+      \xi  &= \littlepiece, \\
+      \eta &= \left( M^{12} \pi^{3} \left( \sqrt{27 \left( 4M^{12} + \xi \right) } - \xi \right) \right)^{1/3},
+    \label{eq:eta}
+    \end{split}
+  \end{equation}
+the solution is taken as
+  \begin{equation}   %  =   =   =   =   =
+  %\begin{split}
+    \phidot = \pm \sqrt{\left( 3\times 2^{1/3} \right)^{-1} \frac{\eta }{\pi^{-2}} - M^{12} 2^{1/3} \eta^{-1} + M^{4} + V }
+    \label{eq:soln}
+  %\end{split}
+  \end{equation}
+
+\section{Behavior}
+The solution in \eqref{eq:soln} is plotted with $M=V=1$ in figure \ref{fig:plot}. 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[ width = 4in ]{"phidot M = V = 1"} 
+   \caption{$\phidot$ with $M = V = 1$}
+   \label{fig:plot}
+\end{figure}
+
+\subsection{Asymptotics}
+For unbounded momenta,
+  \begin{equation}   %  =   =   =   =   =
+  %\begin{split}
+    \lim_{\pi\to\infty} \phidot = \sqrt{M^{4}+V}.
+    %\label{eq:}
+  %\end{split}
+  \end{equation}
+The numerical behavior of the small momentum sequence requires attention. Analytically,
+  \begin{equation}   %  =   =   =   =   =
+  %\begin{split}
+    \lim_{\pi\to 0} \phidot = 0.
+    %\label{eq:}
+  %\end{split}
+  \end{equation}
+
+A table of values was built in Mathematica:
+\begin{table}[htbp]
+  \caption{Function evaluations, naive double precision.}
+  \begin{center}
+    \begin{tabular}{ll}
+       $\pi$ & $\pd\left( \pi, M = 1, V = 1 \right)$ \\\hline
+       \color{mygray} $10^{-12}$ & \color{mygray} 0.0413399 \\
+       \color{mygray} $10^{-11}$ & \color{mygray} 0.0123526 \\
+       \color{mygray} $10^{-10}$ & \color{mygray} 0.00378221 \\
+       \color{mygray} $10^{-9}$  & \color{mygray} 0.00109183 \\
+       \color{mygray} $10^{-8}$  & \color{mygray} 0.000345267 \\
+       \color{mygray} $10^{-7}$  & \color{mygray} 0.0000965051 \\
+       \color{mygray} $10^{-6}$  & \color{mygray} 0.0000285466 \\
+       0.00001 & 0.0000295485 \\
+       0.0001 & 0.000282851 \\
+       0.001 & 0.00282841 \\
+       0.01 & 0.0282673 \\
+       0.1 & 0.26777 \\
+       1. & 1. \\
+       10. & 1.31941 \\
+       100. & 1.39359 \\
+    \end{tabular}
+  \end{center}
+  \label{tab:data}
+\end{table}%
+The gray shaded values signal a computation problem due to the fact that \href{https://en.wikipedia.org/wiki/Loss_of_significance}{subtraction} is an ill-conditioned process in finite precision arithmetic. As $\pi\to0$, the quantity
+$$ \left( 3\times 2^{1/3} \right)^{-1} \frac{\eta }{\pi^{-2}} - M^{12} 2^{1/3} \eta^{-1}$$
+becomes the difference of two large numbers. \href{https://math.stackexchange.com/questions/1920525/why-is-catastrophic-cancellation-called-so}{Catastrophic cancellation} destroys the precision of the result.
+
+One solution is to use a Maclaurin expansion near the origin. The foundation series that describes $\eta$ in \eqref{eq:eta}:
+  \begin{equation*}   %  =   =   =   =   =
+  %\begin{split
+   \eta \approx 2^{1/3}\sqrt{3} M^{6} p - 
+        \frac{3(M^{4}+V)}{2^{2/3}} \pi^{2} + 
+        \frac{3\sqrt{3}\inv^{2}}{4\times2^{2/3}M^{6}}\pi^{3} +
+        \frac{3\inv^{3}}{2^{2/3}M^{12}}\pi^{4} +
+        \mathcal{O}\left( \pi^{4}\right).
+    %\label{eq:}
+  %\end{split}
+  \end{equation*}
+Manipulation of these two terms yields the Laurent expansions
+  \begin{equation*}   %  =   =   =   =   =
+   \begin{split}
+     %
+     \frac{\eta }{3\times 2^{1/3}\pi^{-2}} &\approx 
+     		\frac{M^{6}}{\sqrt{3}p} - \frac{1}{2}\inv + \frac{\sqrt{3}}{8M^{6}} \inv^{2}p + \frac{\inv^{3}}{2M^{12}} \pi^{2} + \mathcal{O}(\pi^{3}) \\
+     %
+     M^{12} 2^{1/3} \eta^{-1} &\approx 
+     		\frac{M^{6}}{\sqrt{3}p} + \frac{1}{2}\inv + \frac{\sqrt{3}}{8M^{6}} \inv^{2}p - \frac{\inv^{3}}{2M^{12}} \pi^{2} + \mathcal{O}(\pi^{3})
+     %
+    %\label{eq:}
+   \end{split}
+  \end{equation*}
+The nature of the convergence is linear, as given by
+  \begin{equation}   %  =   =   =   =   =
+  %\begin{split}
+    \lim_{\pi\to0}\phidot \approx \sqrt{\frac{\inv^{3}}{M^{12}} \pi^{2} + \mathcal{O}(\pi^{3})}.
+    \label{eq:tozero}
+  %\end{split}
+  \end{equation}
+
+
+\subsection{Invariance}
+Equation \eqref{eq:soln} has at least one invariant. When $M^{4} + V = 0$, $\phidot=0$.
+
+\end{document}  
