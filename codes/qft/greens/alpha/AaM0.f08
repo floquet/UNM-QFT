@@ -7,6 +7,7 @@ program AaM0
     use mFields,                        only : fields
     use mFileHandling,                  only : safeopen_readonly
     use mExtents,                       only : extents
+    use mParameterSets,                 only : nParameterSets, ParameterCollection, load_parameter_sets_fcn
     use mSetPrecision,                  only : ip, rp
     use mTimeStamp,                     only : timestamp
 
@@ -21,7 +22,7 @@ program AaM0
     !integer ( ip ) :: Nphi = 0, Ngphi = 0, Ndphi = 0
     !integer ( ip ) :: Nsweeps = 0, Ns = 0, Nt = 0
     integer ( ip ) :: index = 0
-    integer        :: io_in_run_parameters = 0
+    integer        :: io_in_run_parameters = 0, k = 0, success = -1
 
     ! derived types
     type ( fields ), target  :: myFields
@@ -51,6 +52,16 @@ program AaM0
             write ( stdout, 100 ) 'extent % Nphi = ', extent % Nphi
             write ( stdout, 100 ) 'myFields % myExtents % Ngphi = ', myFields % myExtents % Ngphi
 
+            success = load_parameter_sets_fcn ( )
+            ! loop over parameter sets
+            do k = 1, nParameterSets
+                Mass = ParameterCollection ( k ) % Mass
+                m    = ParameterCollection ( k ) % m
+                at   = ParameterCollection ( k ) % at
+                as   = ParameterCollection ( k ) % a
+                write ( stdout, 100 ) k, ': Mass = ', Mass
+                write ( stdout, 100 ) k, ': m    = ', m
+            end do
             extent => null ( )
 
         call cpu_time ( cpu_time_stop  )
