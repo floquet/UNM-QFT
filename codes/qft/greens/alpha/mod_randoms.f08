@@ -14,8 +14,8 @@ module mRandoms
     integer :: seed_size = 0
     integer, allocatable :: SeedUsed ( : )
 
-    integer,        private          :: k = 0              ! counter for this scope
-    integer ( ip ), private          :: alloc_status  = 0  ! error handling
+    integer,                 private :: k = 0              ! counter for this scope
+    integer ( ip ),          private :: alloc_status  = 0  ! error handling
     character ( len = 512 ), private :: alloc_message = '' ! error handling
     character ( len = * ), parameter :: me_module = 'module mRandoms'  ! self-identification
 

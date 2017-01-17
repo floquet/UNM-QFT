@@ -3,7 +3,7 @@ program AaM0
 
     use, intrinsic :: iso_fortran_env,  only : compiler_version, compiler_options
 
-    use mConstants,                     only : stdout, zero, mySeed!, one
+    use mConstants,                     only : stdout, zero, mySeed, biggest!, one
     use mFields,                        only : fields
     use mFileHandling,                  only : safeopen_readonly
     use mExtents,                       only : extents
@@ -20,6 +20,8 @@ program AaM0
     real ( rp ) :: as = zero, at = zero, Mass = zero, m = zero, df = zero
     real ( rp ) :: cpu_time_start = zero, cpu_time_stop = zero, cpu_time_elapsed = zero
     real ( rp ) :: random = zero
+    real ( rp ) :: highphi = zero, highgphi = zero, highdphi = zero
+    real ( rp ) :: minA = biggest, outoftable = zero
 
     integer ( ip ) :: index = 0
     integer        :: io_in_run_parameters = 0, k = 0, success = -1
