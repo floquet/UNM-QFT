@@ -1,6 +1,6 @@
 module mParameterSets
 
-    use mConstants,                     only : zero, one
+    use mConstants,                     only : zero, one, stdout
     use mSetPrecision,                  only : rp
 
     implicit none
@@ -31,6 +31,8 @@ contains
         ParameterCollection ( 2 ) % m    = one
         ParameterCollection ( 2 ) % at   = one
         ParameterCollection ( 2 ) % a    = one
+
+        write ( stdout, '( /,"Parameter sets loaded.", / )' )
 
         success = 0
 

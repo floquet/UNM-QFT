@@ -21,6 +21,11 @@ module mRandoms
 
 contains ! methods: subroutines and functions
 
+    ! byte_flipper
+    ! random_integer_fcn
+    ! seed_across_processors_sub
+    ! init_random_seed_sub
+
     function byte_flipper ( input ) result ( byte_flipped )  ! flip bytes: sequences with small changes become
                                                              !             sequences with large changes
         integer ( ip ), intent ( in ) :: input
@@ -64,8 +69,8 @@ contains ! methods: subroutines and functions
     ! If SeedIn is passed, use it to seed rng and return.
     ! Otherwise, create a new seed. First check for a system level seed.
 
-        integer, intent ( IN ),  optional :: SeedIn  ( : )
-        logical, intent ( IN ),  optional :: FlagCheckOS
+        integer, intent ( in ),  optional :: SeedIn  ( : )
+        logical, intent ( in ),  optional :: FlagCheckOS
 
         ! rank 0
         real ( rp ) :: myCPU_real = 0.0_rp
@@ -85,6 +90,7 @@ contains ! methods: subroutines and functions
 
             ! interogate for size of seed vector and allocate memory
             call random_seed ( size = seed_size )  ! measure seed size for allocation
+            write ( *, '( "seed_size = ", g0 )' ) seed_size
             if ( .not. allocated ( SeedUsed ) ) then
                 allocate ( SeedUsed ( 1 : seed_size ), stat = alloc_status, errmsg = alloc_message )
                 if ( alloc_status /= 0 ) then

@@ -67,17 +67,35 @@ mod_set_precision.o           :
 mod_time_step.o               :
 
 # rditldmt@ITLDMT-MD-O2034:alpha $ date
-# Mon Jan 16 18:20:17 CST 2017
+# Tue Jan 17 16:18:42 CST 2017
 # rditldmt@ITLDMT-MD-O2034:alpha $ pwd
-# /Users/rditldmt/hpc/fortran/projects/qft/greens/alpha
-# rditldmt@ITLDMT-MD-O2034:alpha $
+# /Users/rditldmt/Documents/GitHub Desktop/UNM-QFT/codes/qft/greens/alpha
 # rditldmt@ITLDMT-MD-O2034:alpha $ make debug
 # PROGRAM  = AaM0
 # PRG_OBJ  = AaM0.o
-# SRCS     = AaM0.f08 mod_constants.f08 mod_extents.f08 mod_fields.f08 mod_file_handling.f08 mod_randoms.f08 mod_set_precision.f08 mod_time_stamp.f08
-# OBJS     = AaM0.o mod_constants.o mod_extents.o mod_fields.o mod_file_handling.o mod_randoms.o mod_set_precision.o mod_time_stamp.o
-# MODS     = mod_constants.f08 mod_extents.f08 mod_fields.f08 mod_file_handling.f08 mod_randoms.f08 mod_set_precision.f08 mod_time_stamp.f08
-# MOD_OBJS = mod_constants.o mod_extents.o mod_fields.o mod_file_handling.o mod_randoms.o mod_set_precision.o mod_time_stamp.o
-# rditldmt@ITLDMT-MD-O2034:alpha $
-# rditldmt@ITLDMT-MD-O2034:alpha $ echo $gflags
-# -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only
+# SRCS     = AaM0.f08 mod_constants.f08 mod_extents.f08 mod_fields.f08 mod_file_handling.f08 mod_parameter_sets.f08 mod_randoms.f08 mod_set_precision.f08 mod_time_stamp.f08
+# OBJS     = AaM0.o mod_constants.o mod_extents.o mod_fields.o mod_file_handling.o mod_parameter_sets.o mod_randoms.o mod_set_precision.o mod_time_stamp.o
+# MODS     = mod_constants.f08 mod_extents.f08 mod_fields.f08 mod_file_handling.f08 mod_parameter_sets.f08 mod_randoms.f08 mod_set_precision.f08 mod_time_stamp.f08
+# MOD_OBJS = mod_constants.o mod_extents.o mod_fields.o mod_file_handling.o mod_parameter_sets.o mod_randoms.o mod_set_precision.o mod_time_stamp.o
+# rditldmt@ITLDMT-MD-O2034:alpha $ make
+# gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_set_precision.o mod_set_precision.f08
+# make: Circular mod_constants.o <- mod_constants.o dependency dropped.
+# gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_constants.o mod_constants.f08
+# gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_extents.o mod_extents.f08
+# gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_fields.o mod_fields.f08
+# mod_fields.f08:52:37:
+#
+#      function allocate_rank_1_fcn ( me, array, length ) result  ( fcn_success )
+#                                      1
+# Warning: Unused dummy argument 'me' at (1) [-Wunused-dummy-argument]
+# gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_file_handling.o mod_file_handling.f08
+# gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_parameter_sets.o mod_parameter_sets.f08
+# gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_randoms.o mod_randoms.f08
+# gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_time_stamp.o mod_time_stamp.f08
+# gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o AaM0.o AaM0.f08
+# AaM0.f08:94:7:
+#
+#      110 format ( * ( g0, ', ' ) )
+#        1
+# Warning: Label 110 at (1) defined but not used [-Wunused-label]
+# gfortran -g -o AaM0 AaM0.o mod_constants.o mod_extents.o mod_fields.o mod_file_handling.o mod_parameter_sets.o mod_randoms.o mod_set_precision.o mod_time_stamp.o
