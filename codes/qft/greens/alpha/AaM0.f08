@@ -19,8 +19,6 @@ program AaM0
     real ( rp ) :: as = zero, at = zero, Mass = zero, m = zero, df = zero
     real ( rp ) :: cpu_time_start = zero, cpu_time_stop = zero, cpu_time_elapsed = zero
 
-    !integer ( ip ) :: Nphi = 0, Ngphi = 0, Ndphi = 0
-    !integer ( ip ) :: Nsweeps = 0, Ns = 0, Nt = 0
     integer ( ip ) :: index = 0
     integer        :: io_in_run_parameters = 0, k = 0, success = -1
 
@@ -67,12 +65,16 @@ program AaM0
         call cpu_time ( cpu_time_stop  )
         cpu_time_elapsed = cpu_time_stop - cpu_time_start
 
+        write ( stdout, * )
         write ( stdout, 100 ) 'cpu seconds: ', cpu_time_elapsed
         write ( stdout, 100 ) 'timestamp: ', timestamp ( )
 
-        write ( stdout, '( /, "Fortran compiler version:    ", g0    )' ) compiler_version ( )
-        write ( stdout, '(    "Fortran compilation options: ", g0, / )' ) compiler_options ( )
+        write ( stdout, * )
+        write ( stdout, 100 ) 'Fortran compiler version: ', compiler_version ( )
+        write ( stdout, * )
+        write ( stdout, 100 ) 'Fortran compilation options: ', compiler_options ( )
 
+        write ( stdout, * )
         stop 'successful completion for AaM0.f08 . . .'
 
     100 format ( * ( g0 ) )
