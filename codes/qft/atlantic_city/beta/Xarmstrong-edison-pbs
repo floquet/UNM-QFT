@@ -1,0 +1,41 @@
+#!/bin/bash
+## Required PBS Directives --------------------------------------
+#PBS -A ARLAP96070PET
+#PBS -q standard 
+#PBS -l select=1:ncpus=24:mpiprocs=24
+#PBS -l min_walltime=000:30:00
+#PBS -l max_walltime=168:00:00
+#PBS -l     walltime=168:00:00
+#PBS -j oe
+#PBS -V
+
+source ${myGit}/bash/pbs/pbs_pulse
+
+echo ''
+echo 'module list'
+module list
+
+echo ''
+#echo 'module switch PrgEnv-cray/5.2.40 PrgEnv-gnu/5.2.4'
+#module switch PrgEnv-cray/5.2.40 PrgEnv-gnu/5.2.4
+#echo ''
+#echo 'module switch gcc/4.9.3 gcc/5.3.0'
+#module switch gcc/4.9.3 gcc/5.3.0
+
+echo ''
+cd ${PBS_O_WORKDIR}
+echo 'directory = '$(pwd)
+
+echo ''
+echo 'ftn  makesAC.f90 -o makesAC'
+ftn  makesAC.f90 -o makesAC
+
+echo ''
+ls -alh
+
+echo ''
+echo ${run}' ./makesAC'
+${run} ./makesAC < inm1a.1
+
+# 2016 08 19 - call script from git library
+

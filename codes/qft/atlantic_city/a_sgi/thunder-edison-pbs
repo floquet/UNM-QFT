@@ -1,0 +1,47 @@
+#!/bin/bash
+## Required PBS Directives --------------------------------------
+#PBS -A ARLAP96070PET
+#PBS -q standard 
+#PBS -l select=20:ncpus=36:mpiprocs=36
+#PBS -l min_walltime=000:30:00
+#PBS -l max_walltime=024:00:00
+#PBS -l     walltime=024:00:00
+#PBS -j oe
+#PBS -V
+
+echo ''
+echo 'start: '$(date)
+
+source ${myGit}/bash/pbs/pbs_pulse
+
+echo ''
+echo 'module list'
+module list
+
+echo ''
+echo 'export fortran_compiler_mpi_gnu=ftn'
+export fortran_compiler_mpi_gnu='mpif90'
+
+# copy files to $WORKDIR and compile there
+source ${myGit}bash/pbs/pbs_copier
+
+echo ''
+echo 'make:'
+make
+
+echo ''
+echo 'make debug:'
+make debug
+
+echo ''
+echo 'ls -alh:'
+ls -alh
+
+echo ''
+echo ${run}' ./makesAC < inm1a.1'
+${run} ./makesAC < inm1a.1
+
+echo ''
+echo 'finish: '$(date)
+make clean
+

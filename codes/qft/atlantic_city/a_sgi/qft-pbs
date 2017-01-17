@@ -1,0 +1,76 @@
+#!/bin/bash
+## Required PBS Directives --------------------------------------
+#PBS -A ARLAP96070PET
+#PBS -q standard 
+#PBS -l select=200:ncpus=36:mpiprocs=36
+#PBS -l min_walltime=024:00:00
+#PBS -l max_walltime=024:00:00
+#PBS -l     walltime=024:00:00
+#PBS -j oe
+#PBS -V
+
+echo ''
+echo 'start: '$(date)
+export myWORKDIR=${WORKDIR}
+source ${myGit}/bash/pbs/pbs_pulse
+
+echo ''
+echo 'module list pre-purge:'
+module list
+
+echo ''
+echo 'module purge'
+module purge
+
+echo ''
+echo 'module list post-purge:'
+module list
+
+echo ''
+echo 'module load gcc-compilers/6.2.0'
+echo 'module load mpt/2.14'
+module load gcc-compilers/6.2.0
+module load mpt/2.14
+
+echo ''
+echo 'module list'
+module list
+
+echo ''
+echo 'export fortran_compiler_mpi_gnu=ftn'
+export fortran_compiler_mpi_gnu='mpif90'
+
+# copy files to $WORKDIR and compile there
+source ${myGit}bash/pbs/pbs_copier
+
+echo ''
+echo 'make:'
+make
+
+echo ''
+echo 'make debug:'
+make debug
+
+echo ''
+echo 'make clean'
+make clean
+
+echo ''
+echo 'directory = '$(pwd)
+
+echo ''
+echo 'ls -alh:'
+ls -alh
+
+echo ''
+echo ${run}' ./makesAC < inm1a.1'
+${run} ./makesAC < inm1a.1
+
+echo ''
+echo 'make clean'
+make clean
+
+echo ''
+echo 'finish: '$(date)
+echo ''
+
