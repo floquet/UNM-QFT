@@ -3,14 +3,15 @@ program AaM0
 
     use, intrinsic :: iso_fortran_env,  only : compiler_version, compiler_options
 
-    use mConstants,                     only : stdout, zero, mySeed, biggest!, one
-    use mFields,                        only : fields
+    use mConstants,                     only : stdout, zero, one, mySeed, biggest, mille
+    use mFields,                        only : housekeeping_sub, fields
     use mFileHandling,                  only : safeopen_readonly
     use mExtents,                       only : extents
     use mParameterSets,                 only : nParameterSets, ParameterCollection, load_parameter_sets_fcn
     use mRandoms,                       only : init_random_seed_sub!, SeedUsed
     use mSetPrecision,                  only : ip, rp
     use mTimeStamp,                     only : timestamp
+    !use mFields,                        only : housekeeping_sub, fields
 
     implicit none
 
@@ -22,13 +23,15 @@ program AaM0
     real ( rp ) :: random = zero
     real ( rp ) :: highphi = zero, highgphi = zero, highdphi = zero
     real ( rp ) :: minA = biggest, outoftable = zero
+    real ( rp ) :: phistep = zero, gphistep = zero, dphistep = zero
 
     integer ( ip ) :: index = 0
-    integer        :: io_in_run_parameters = 0, k = 0, success = -1
+    integer        :: io_in_run_parameters = 0, io_in_farray = 0, success = -1
+    integer ( ip ) :: i = 0, j = 0, k = 0, l = 0, kPS = 0
 
     ! derived types
-    type ( fields ), target  :: myFields
-    type ( extents), pointer :: extent => null ( )
+    type ( fields ), target   :: myFields
+    type ( extents ), pointer :: extent => null ( )
 
     character ( len = 64 ) :: tablename = '', temp = '', farray = '', root = ''
     character ( len = *  ), parameter :: input_file = 'inM0m1a.1'
@@ -62,20 +65,47 @@ program AaM0
 
             write ( stdout, 100 ) 'extent % Nphi = ', extent % Nphi
             write ( stdout, 100 ) 'myFields % myExtents % Ngphi = ', myFields % myExtents % Ngphi
-            extent => null ( )
+
+            call housekeeping_sub ( myFields )
 
             ! loop over parameter sets
             success = load_parameter_sets_fcn ( )
             if ( success /= 0 ) stop 'Fatal error: parameter sets failed to load.'
 
-            do k = 1, nParameterSets
-                Mass = ParameterCollection ( k ) % Mass
-                m    = ParameterCollection ( k ) % m
-                at   = ParameterCollection ( k ) % at
-                as   = ParameterCollection ( k ) % a
-                write ( stdout, 100 ) k, ': Mass = ', Mass
-                write ( stdout, 100 ) k, ': m    = ', m
-            end do
+            do kPS = 1, nParameterSets
+                Mass = ParameterCollection ( kPS ) % Mass
+                m    = ParameterCollection ( kPS ) % m
+                at   = ParameterCollection ( kPS ) % at
+                as   = ParameterCollection ( kPS ) % a
+                write ( stdout, 100 ) kPS, ': Mass = ', Mass
+                write ( stdout, 100 ) kPS, ': m    = ', m
+
+                phistep  = maxPhi  / real ( extent % Nphi,  rp )
+                gphistep = maxGphi / real ( extent % Ngphi, rp )
+                dphistep = maxDphi / real ( extent % Ndphi, rp )
+
+                if ( temp == 'hot' ) then
+                    io_in_farray = safeopen_readonly ( farray )
+                    read ( io_in_farray, * ) myFields % f
+                    write ( stdout, 100 ) 'The temp is ', temp
+                else if ( temp == 'cold') then
+                    do i = 1, extent % Ns
+                        do j = 1, extent % Ns
+                            do k = 1, extent % Ns
+                                do l = 1, extent % Nt
+                                    call random_number ( random )
+                                    myFields % f ( i, j, k, l ) = ( one - random ) * mille
+                                end do ! l
+                            end do ! k
+                        end do ! j
+                    end do ! i
+                    write ( stdout, 100 ) 'The temp is ', temp
+                    else
+                        write ( stdout, 100 ) 'I need to know the temperature.'
+                        stop 'Fatal error - no temperature.'
+                    end if
+            end do ! kPS
+            extent => null ( )
 
         call cpu_time ( cpu_time_stop  )
         cpu_time_elapsed = cpu_time_stop - cpu_time_start
@@ -93,7 +123,7 @@ program AaM0
         stop 'successful completion for AaM0.f08 . . .'
 
     100 format ( * ( g0 ) )
-    110 format ( * ( g0, ', ' ) )
+    !110 format ( * ( g0, ', ' ) )
 
 end program AaM0
 
