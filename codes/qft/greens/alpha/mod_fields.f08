@@ -1,7 +1,8 @@
 module mFields
 
-    use mConstants,                     only : one, stdout
+    use mConstants,                     only : one, zero, stdout
     use mExtents,                       only : extents
+    use mMasses,                        only : masses
     use mSetPrecision,                  only : ip, rp
 
     implicit none
@@ -18,6 +19,7 @@ module mFields
         ! rank 0
         ! spatial, temporal extents
         type ( extents ) :: myExtents
+        type ( masses )  :: myMasses
      contains
     !     private
     !     procedure, public :: housekeeping => housekeeping_sub
@@ -25,7 +27,7 @@ module mFields
     end type fields
 
     ! local variables
-    integer , private                :: alloc_status  = -1
+    integer,                 private :: alloc_status  = -1
     character ( len = 512 ), private :: alloc_message = 'null'
     character ( len = * ),   private, parameter :: error_fatal = 'Program halting in module mFields due to fatal error.'
 
@@ -38,31 +40,33 @@ contains
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
     subroutine greens_two_point ( me )
-        class ( fields ), target :: me
-        real ( rp ) :: Esweep
 
-            Esweep = zero
-            me % G ( : ) = zero
+        class ( fields ), target :: me
+
+        !real ( rp ), intent ( in ) :: as, at
+        ! locals
+        integer ( ip ) :: i, j, k, l, iu, ju, ku, lu, luu, luuu
+        !real ( rp ) :: Esweep
+
+            !Esweep = zero
 
             do i = 1, me % myExtents % Ns
-                iu = me % myExtents % ups(i)
+                iu = me % ups ( i )
                 do j = 1, me % myExtents % Ns
-                    ju=me % myExtents % ups(j)
+                    ju = me % ups ( j )
                     do k = 1, me % myExtents % Ns
-                        ku=me % myExtents % ups(k)
+                        ku = me % ups ( k )
                         do l = 1, me % myExtents % Nt ! time
-                            lu=upt(l); luu=upt(lu); luuu=upt(luu)
-                            Esweep = Esweep + one / ( me % myExtents % at * me % myExtents % as**3)
-                            G(0) = G(0) + f(i,j,k,l)**2
-                            G(1) = G(1) + f(i,j,k,lu)*f(i,j,k,l)
-                            G(2) = G(2) + f(i,j,k,luu)*f(i,j,k,l)
-                            G(3) = G(3) + f(i,j,k,luuu)*f(i,j,k,l)
-                            kount = kount + one
+                            lu = me % upt ( l ); luu = me % upt ( lu ); luuu = me % upt ( luu )
+                            me % G ( 0 ) = me % G ( 0 ) + me % f ( i, j, k, l    ) * me % f ( i, j, k, l )
+                            me % G ( 1 ) = me % G ( 1 ) + me % f ( i, j, k, lu   ) * me % f ( i, j, k, l )
+                            me % G ( 2 ) = me % G ( 2 ) + me % f ( i, j, k, luu  ) * me % f ( i, j, k, l )
+                            me % G ( 3 ) = me % G ( 3 ) + me % f ( i, j, k, luuu ) * me % f ( i, j, k, l )
                         end do
                     end do
                 end do
             end do
-            E_0(sweep) = Esweep/real(Nt*Ns**3,8)
+            !  % E_0 ( sweep ) = me % myExtents % volume_ip / me % myExtents % avolume / me % volume_rp
 
     end subroutine greens_two_point
 
@@ -74,6 +78,7 @@ contains
 
             call allocator_sub ( me ) ! allocate all arrays
             call neighbors_sub ( me ) ! populate pointers to neighbors
+            me % G ( : ) = zero
 
     end subroutine housekeeping_sub
 

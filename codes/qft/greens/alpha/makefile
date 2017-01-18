@@ -59,10 +59,10 @@ $(PRG_OBJ) : $(MOD_OBJS)
 # mod_allocator.o               : mod_set_precision.o
 mod_constants.o               : mod_set_precision.o mod_constants.o
 mod_extents.o                 : mod_set_precision.o
-mod_fields.o                  : mod_set_precision.o mod_constants.o mod_extents.o
+mod_fields.o                  : mod_set_precision.o mod_constants.o mod_extents.o mod_masses.o
 mod_file_handling.o           :
-mod_funciton_library.o        : mod_set_precision.o
-mod_parameter_sets.o          : mod_set_precision.o mod_constants.o
+mod_function_library.o        : mod_set_precision.o mod_fields.o mod_masses.o
+mod_masses.o                  : mod_set_precision.o mod_constants.o
 mod_randoms.o                 : mod_set_precision.o
 mod_set_precision.o           :
 mod_time_step.o               :

@@ -8,6 +8,7 @@ program AaM0
     use mFileHandling,                  only : safeopen_readonly
     use mFunctionLibrary,               only : aA
     use mExtents,                       only : extents
+    use mMasses,                        only : masses
     use mParameterSets,                 only : nParameterSets, ParameterCollection, load_parameter_sets_fcn
     use mRandoms,                       only : init_random_seed_sub!, SeedUsed
     use mSetPrecision,                  only : ip, rp
@@ -17,10 +18,9 @@ program AaM0
     implicit none
 
     ! rank 1
-    real ( rp ) :: G ( 0 : 3 ) = zero
     ! rank 0
     real ( rp ) :: maxPhi = zero, maxGphi = zero, maxDphi = zero
-    real ( rp ) :: as = zero, at = zero, Mass = zero, m = zero, df = zero
+    real ( rp ) :: df = zero
     real ( rp ) :: cpu_time_start = zero, cpu_time_stop = zero, cpu_time_elapsed = zero
     real ( rp ) :: random = zero
     real ( rp ) :: highphi = zero, highgphi = zero, highdphi = zero
@@ -33,8 +33,9 @@ program AaM0
     integer ( ip ) :: i = 0, j = 0, k = 0, l = 0, kPS = 0
 
     ! derived types
-    type ( fields ), target   :: myFields
+    type ( fields ),  target  :: myFields
     type ( extents ), pointer :: extent => null ( )
+    type ( masses ),  pointer :: mass   => null ( )
 
     character ( len = 64 ) :: tablename = '', temp = '', farray = '', root = ''
     character ( len = *  ), parameter :: input_file = 'inM0m1a.1'
@@ -44,8 +45,8 @@ program AaM0
             ! call init_random_seed_sub ( FlagCheckOS = .true. )
             ! write ( stdout, 110 ) 'random number seed ', SeedUsed
             call init_random_seed_sub ( mySeed )
-            write ( stdout, 100 ) 'first 10 random numbers:'
-            do k = 1, 10
+            write ( stdout, 100 ) 'first 5 random numbers:'
+            do k = 1, 5
                 call random_number ( random )
                 write ( stdout, 100 ) k, '. ', random
             end do
@@ -55,16 +56,20 @@ program AaM0
 
             ! ./AaM0 < input_file
             extent => myFields % myExtents
+            mass   => myFields % myMasses
             read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) maxPhi, maxGphi, maxDphi
             read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) extent % Nphi, &
                                                                                extent % Ngphi, &
                                                                                extent % Ndphi
-            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) as, at, Mass, m, df
+            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) extent % as, extent % at, &
+                                                                               mass % Mass, mass % m, df
             read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) tablename, temp, root, farray, index
             read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) extent % Nsweeps, &
                                                                                extent % Ns, &
                                                                                extent % Nt
             close ( io_in_run_parameters )
+
+            call extent % volume ( )
 
             write ( stdout, 100 ) 'extent % Nphi = ', extent % Nphi
             write ( stdout, 100 ) 'myFields % myExtents % Ngphi = ', myFields % myExtents % Ngphi
@@ -76,12 +81,12 @@ program AaM0
             if ( success /= 0 ) stop 'Fatal error: parameter sets failed to load.'
 
             do kPS = 1, nParameterSets
-                Mass = ParameterCollection ( kPS ) % Mass
-                m    = ParameterCollection ( kPS ) % m
-                at   = ParameterCollection ( kPS ) % at
-                as   = ParameterCollection ( kPS ) % a
-                write ( stdout, 100 ) kPS, ': Mass = ', Mass
-                write ( stdout, 100 ) kPS, ': m    = ', m
+                mass   % Mass = ParameterCollection ( kPS ) % Mass
+                mass   % m    = ParameterCollection ( kPS ) % m
+                extent % at   = ParameterCollection ( kPS ) % at
+                extent % as   = ParameterCollection ( kPS ) % a
+                write ( stdout, 100 ) kPS, ': Mass = ', mass % Mass
+                write ( stdout, 100 ) kPS, ': m    = ', mass % m
 
                 phistep  = maxPhi  / real ( extent % Nphi,  rp )
                 gphistep = maxGphi / real ( extent % Ngphi, rp )
@@ -104,11 +109,11 @@ program AaM0
                     end do ! i
                     write ( stdout, 100 ) 'The temp is ', temp
                     else
-                        write ( stdout, 100 ) 'I need to know the temperature.'
-                        stop 'Fatal error - no temperature.'
+                        stop 'Fatal error - I need to know the temperature.'
                     end if
             end do ! kPS
             extent => null ( )
+            mass   => null ( )
 
         call cpu_time ( cpu_time_stop  )
         cpu_time_elapsed = cpu_time_stop - cpu_time_start
