@@ -12,8 +12,10 @@ module mFields
         ! rank 3
         real ( rp ),    allocatable, dimension ( : , : , : )     :: A, C
         ! rank 1
-        real ( rp ),    allocatable, dimension ( : )             :: phi, gphi, dphi
+        real ( rp ),    allocatable, dimension ( : )             :: phi, gphi, dphi, E_0
         integer ( ip ), allocatable, dimension ( : )             :: ups, dns, upt, dnt
+        real ( rp )                                              :: G ( 0 : 3 )
+        ! rank 0
         ! spatial, temporal extents
         type ( extents ) :: myExtents
      contains
@@ -32,6 +34,37 @@ module mFields
     private :: allocate_rank_1_ip_sub
 
 contains
+
+    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+
+    subroutine greens_two_point ( me )
+        class ( fields ), target :: me
+        real ( rp ) :: Esweep
+
+            Esweep = zero
+            me % G ( : ) = zero
+
+            do i = 1, me % myExtents % Ns
+                iu = me % myExtents % ups(i)
+                do j = 1, me % myExtents % Ns
+                    ju=me % myExtents % ups(j)
+                    do k = 1, me % myExtents % Ns
+                        ku=me % myExtents % ups(k)
+                        do l = 1, me % myExtents % Nt ! time
+                            lu=upt(l); luu=upt(lu); luuu=upt(luu)
+                            Esweep = Esweep + one / ( me % myExtents % at * me % myExtents % as**3)
+                            G(0) = G(0) + f(i,j,k,l)**2
+                            G(1) = G(1) + f(i,j,k,lu)*f(i,j,k,l)
+                            G(2) = G(2) + f(i,j,k,luu)*f(i,j,k,l)
+                            G(3) = G(3) + f(i,j,k,luuu)*f(i,j,k,l)
+                            kount = kount + one
+                        end do
+                    end do
+                end do
+            end do
+            E_0(sweep) = Esweep/real(Nt*Ns**3,8)
+
+    end subroutine greens_two_point
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
@@ -66,6 +99,7 @@ contains
             call allocate_rank_1_rp_sub ( me % phi,  me % myExtents % Nphi + 1 )
             call allocate_rank_1_rp_sub ( me % gphi, me % myExtents % Nphi + 1 )
             call allocate_rank_1_rp_sub ( me % dphi, me % myExtents % Nphi + 1 )
+            call allocate_rank_1_rp_sub ( me % E_0,  me % myExtents % Nsweeps )
             ! pbc
             call allocate_rank_1_ip_sub ( me % ups,  me % myExtents % Ns )
             call allocate_rank_1_ip_sub ( me % dns,  me % myExtents % Ns )

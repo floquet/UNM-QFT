@@ -6,6 +6,7 @@ program AaM0
     use mConstants,                     only : stdout, zero, one, mySeed, biggest, mille
     use mFields,                        only : housekeeping_sub, fields
     use mFileHandling,                  only : safeopen_readonly
+    use mFunctionLibrary,               only : aA
     use mExtents,                       only : extents
     use mParameterSets,                 only : nParameterSets, ParameterCollection, load_parameter_sets_fcn
     use mRandoms,                       only : init_random_seed_sub!, SeedUsed
@@ -15,8 +16,9 @@ program AaM0
 
     implicit none
 
-    ! rank 2
     ! rank 1
+    real ( rp ) :: G ( 0 : 3 ) = zero
+    ! rank 0
     real ( rp ) :: maxPhi = zero, maxGphi = zero, maxDphi = zero
     real ( rp ) :: as = zero, at = zero, Mass = zero, m = zero, df = zero
     real ( rp ) :: cpu_time_start = zero, cpu_time_stop = zero, cpu_time_elapsed = zero
@@ -24,6 +26,7 @@ program AaM0
     real ( rp ) :: highphi = zero, highgphi = zero, highdphi = zero
     real ( rp ) :: minA = biggest, outoftable = zero
     real ( rp ) :: phistep = zero, gphistep = zero, dphistep = zero
+    real ( rp ) :: E = zero, E_0 = 0
 
     integer ( ip ) :: index = 0
     integer        :: io_in_run_parameters = 0, io_in_farray = 0, success = -1
