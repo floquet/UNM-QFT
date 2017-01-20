@@ -66,6 +66,7 @@ mod_masses.o                  : mod_set_precision.o mod_constants.o
 mod_randoms.o                 : mod_set_precision.o
 mod_set_precision.o           :
 mod_time_step.o               :
+#mod_updateF.o                 : mod_set_precision.o
 
 # rditldmt@ITLDMT-MD-O2034:alpha $ date
 # Tue Jan 17 16:18:42 CST 2017

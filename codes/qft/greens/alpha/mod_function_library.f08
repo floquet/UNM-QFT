@@ -22,8 +22,8 @@ contains
                          +  ( myFields % f (  i,  j, ku,  l ) - myFields % f ( i, j, k, l ) )**2 ) )
             dphil = abs     ( myFields % f (  i,  j,  k, lu ) - myFields % f ( i, j, k, l ) )
             V = ( gphil / myFields % myExtents % as )**2 + ( myMasses % m * phil )**2
-            fcn_result = myFields % myExtents % at * sqrt ( V ) / &
-                       ( myFields % myExtents % as**3 * ( myFields % myExtents % at**2 * V + dphil**2 ) )
+            fcn_result  = myFields % myExtents % at * sqrt ( V ) / &
+                        ( myFields % myExtents % as**3 * ( myFields % myExtents % at**2 * V + dphil**2 ) )
      end function aA
 
 end module mFunctionLibrary

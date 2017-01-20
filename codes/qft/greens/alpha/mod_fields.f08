@@ -15,8 +15,9 @@ module mFields
         ! rank 1
         real ( rp ),    allocatable, dimension ( : )             :: phi, gphi, dphi, E_0
         integer ( ip ), allocatable, dimension ( : )             :: ups, dns, upt, dnt
-        real ( rp )                                              :: G ( 0 : 3 )
+        real ( rp ),                 dimension ( 0 : 3 )         :: G
         ! rank 0
+        integer ( ip ) :: naccept, nreject
         ! spatial, temporal extents
         type ( extents ) :: myExtents
         type ( masses )  :: myMasses
@@ -32,10 +33,73 @@ module mFields
     character ( len = * ),   private, parameter :: error_fatal = 'Program halting in module mFields due to fatal error.'
 
     private :: allocator_sub
-    private :: allocate_rank_1_rp_sub
+    private :: allocate_rank_1_rp_sub, allocate_rank_3_rp_sub, allocate_rank_4_rp_sub
     private :: allocate_rank_1_ip_sub
 
 contains
+
+    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+
+    subroutine update_f ( me )
+
+        class ( fields ), target :: me
+
+        type ( extents ), pointer :: ex
+
+        real ( rp ) :: oldf, oldP, newP, rdn
+
+        integer ( ip ) :: sweep
+        integer ( ip ) :: i,  j,  k,  l,  &
+                          iu, ju, ku, lu, &
+                          id, jd, kd, ld
+
+            ex => me % myExtents
+
+            sweepdo: do sweep = 1, ex % Nsweeps
+                ido: do i = 1, ex % Ns
+                    iu = me % ups ( i )
+                    id = me % dns ( i )
+                    do j = 1, ex % Ns
+                        ju = me % ups ( j )
+                        jd = me % dns ( j )
+                        do k = 1, ex % Ns
+                            ku = me % ups ( k )
+                            kd = me % dns ( k )
+                            ldo: do l = 1, ex % Nt ! time
+                                lu = me % upt ( l )
+                                ld = me % dnt ( l )
+                                oldf = me % f ( i, j, k, l )
+                                oldP = me % aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
+                                     * me % aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
+                                     * me % aA (  i, ju, ku, lu, id,  j,  k,  l ) &
+                                     * me % aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
+                                     * me % aA ( iu, ju,  k, lu,  i,  j, kd,  l )
+                                call random_number ( rdn )
+                                me % f ( i, j, k, l ) = oldf + df * ( rdn - half )
+                                newP = me % aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
+                                     * me % aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
+                                     * me % aA (  i, ju, ku, lu, id,  j,  k,  l ) &
+                                     * me % aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
+                                     * me % aA ( iu, ju,  k, lu,  i,  j, kd,  l )
+                                if ( newP >= oldP ) then ! accept
+                                    me % naccept = me % naccept + one
+                                else
+                                    call random_number ( rdn )
+                                    if ( newP/oldP >= rdn ) then ! accept
+                                        me % naccept = me % naccept + one
+                                    else ! reject
+                                        me % nreject = me % nreject + one
+                                        me % f ( i, j, k, l )  = oldf
+                                    end if
+                                end if
+                            end do ldo
+                        end do
+                    end do
+                end do ido
+
+            ex => null ( )
+
+    end subroutine update_f
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
@@ -79,6 +143,8 @@ contains
             call allocator_sub ( me ) ! allocate all arrays
             call neighbors_sub ( me ) ! populate pointers to neighbors
             me % G ( : ) = zero
+            me % naccept = 0
+            me % nreject = 0
 
     end subroutine housekeeping_sub
 

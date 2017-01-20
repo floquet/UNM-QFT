@@ -6,7 +6,6 @@ program AaM0
     use mConstants,                     only : stdout, zero, one, mySeed, biggest, mille
     use mFields,                        only : housekeeping_sub, fields
     use mFileHandling,                  only : safeopen_readonly
-    use mFunctionLibrary,               only : aA
     use mExtents,                       only : extents
     use mMasses,                        only : masses
     use mParameterSets,                 only : nParameterSets, ParameterCollection, load_parameter_sets_fcn
@@ -110,7 +109,10 @@ program AaM0
                     write ( stdout, 100 ) 'The temp is ', temp
                     else
                         stop 'Fatal error - I need to know the temperature.'
-                    end if
+                end if
+                !call myFields % thermalize ( )
+                call myFields % update_f ( )
+
             end do ! kPS
             extent => null ( )
             mass   => null ( )
