@@ -14,9 +14,13 @@ module mConstants
 
     ! precision controlled numbers
     real ( rp ), parameter :: zero = 0.0_rp, one = 1.0_rp, two = 2.0_rp, three = 3.0_rp
+    real ( rp ), parameter :: half = one / two
 
     real ( rp ), parameter :: biggest = huge ( one ), mille = one / 1000.0_rp
 
     real ( rp ), parameter :: pi = acos ( -one )
+
+    ! formats
+    character ( len = * ), parameter :: fmt_generic = '( * ( g0 ) )'
 
 end module mConstants

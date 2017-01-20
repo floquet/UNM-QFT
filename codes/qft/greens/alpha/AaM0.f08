@@ -91,26 +91,7 @@ program AaM0
                 gphistep = maxGphi / real ( extent % Ngphi, rp )
                 dphistep = maxDphi / real ( extent % Ndphi, rp )
 
-                if ( temp == 'hot' ) then
-                    io_in_farray = safeopen_readonly ( farray )
-                    read ( io_in_farray, * ) myFields % f
-                    write ( stdout, 100 ) 'The temp is ', temp
-                else if ( temp == 'cold') then
-                    do i = 1, extent % Ns
-                        do j = 1, extent % Ns
-                            do k = 1, extent % Ns
-                                do l = 1, extent % Nt
-                                    call random_number ( random )
-                                    myFields % f ( i, j, k, l ) = ( one - random ) * mille
-                                end do ! l
-                            end do ! k
-                        end do ! j
-                    end do ! i
-                    write ( stdout, 100 ) 'The temp is ', temp
-                    else
-                        stop 'Fatal error - I need to know the temperature.'
-                end if
-                !call myFields % thermalize ( )
+                call myFields % thermalize ( temp = temp, farray = farray )
                 call myFields % update_f ( )
 
             end do ! kPS

@@ -1,7 +1,8 @@
 module mFields
 
-    use mConstants,                     only : one, zero, stdout
+    use mConstants,                     only : one, zero, half, stdout, mille
     use mExtents,                       only : extents
+    use mFileHandling,                  only : safeopen_readonly
     use mMasses,                        only : masses
     use mSetPrecision,                  only : ip, rp
 
@@ -14,16 +15,19 @@ module mFields
         real ( rp ),    allocatable, dimension ( : , : , : )     :: A, C
         ! rank 1
         real ( rp ),    allocatable, dimension ( : )             :: phi, gphi, dphi, E_0
-        integer ( ip ), allocatable, dimension ( : )             :: ups, dns, upt, dnt
         real ( rp ),                 dimension ( 0 : 3 )         :: G
+        integer ( ip ), allocatable, dimension ( : )             :: ups, dns, upt, dnt
         ! rank 0
         integer ( ip ) :: naccept, nreject
         ! spatial, temporal extents
         type ( extents ) :: myExtents
         type ( masses )  :: myMasses
      contains
-    !     private
-    !     procedure, public :: housekeeping => housekeeping_sub
+         private
+         !procedure :: aA
+         procedure, public :: housekeeping => housekeeping_sub
+         procedure, public :: thermalize   => thermalize_sub
+         !procedure, public :: update_f     => update_f_fcn
         !procedure, private, nopass :: allocate_rank_1_rp_sub
     end type fields
 
@@ -32,21 +36,80 @@ module mFields
     character ( len = 512 ), private :: alloc_message = 'null'
     character ( len = * ),   private, parameter :: error_fatal = 'Program halting in module mFields due to fatal error.'
 
-    private :: allocator_sub
+    private :: aA
     private :: allocate_rank_1_rp_sub, allocate_rank_3_rp_sub, allocate_rank_4_rp_sub
     private :: allocate_rank_1_ip_sub
+    private :: housekeeping_sub, thermalize_sub
 
 contains
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
-    subroutine update_f ( me )
+    subroutine thermalize_sub ( me, temp, farray )
+
+        class ( fields ), target :: me
+
+        character ( len = 64 ), intent ( in ) :: farray
+        character ( len =  * ), intent ( in ) :: temp
+        ! locals
+        real ( rp ) :: random
+        integer ( ip ) :: i, j, k, l
+        integer :: io_in_farray
+
+            if ( temp == 'hot' ) then
+                write ( stdout, 100 ) 'The temp is ', temp
+                io_in_farray = safeopen_readonly ( farray )
+                read ( io_in_farray, * ) me % f
+            else if ( temp == 'cold') then
+                write ( stdout, 100 ) 'The temp is ', temp
+                do i = 1, me % myExtents % Ns
+                    do j = 1, me % myExtents % Ns
+                        do k = 1, me % myExtents % Ns
+                            do l = 1, me % myExtents % Nt
+                                call random_number ( random )
+                                me % f ( i, j, k, l ) = ( one - random ) * mille
+                            end do ! l
+                        end do ! k
+                    end do ! j
+                end do ! i
+                else
+                    write ( stdout, 100 ) 'Unrecognized temperature: should be "hot" or "cold". Input value was ', temp, '.'
+                    stop 'Fatal error - I need to know the temperature.'
+            end if
+        100 format ( * ( g0 ) )
+
+    end subroutine thermalize_sub
+
+    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+
+    function aA ( iu, ju, ku, lu, i, j, k, l ) result ( fcn_result )
+
+        class ( fields ), target :: me
+
+        integer ( ip ),  intent ( in ) :: iu, ju, ku, lu, i, j, k, l
+        real ( rp ) :: fcn_result
+        ! locals
+        real ( rp ) :: phil, gphil, dphil, V
+
+            phil = abs      ( me % f (  i,  j,  k,  l ) )
+            gphil = sqrt( ( ( me % f ( iu,  j,  k,  l ) - me % f ( i, j, k, l ) )**2 &
+                         +  ( me % f (  i, ju,  k,  l ) - me % f ( i, j, k, l ) )**2 &
+                         +  ( me % f (  i,  j, ku,  l ) - me % f ( i, j, k, l ) )**2 ) )
+            dphil = abs     ( me % f (  i,  j,  k, lu ) - me % f ( i, j, k, l ) )
+            V = ( gphil / me % myExtents % as )**2 + ( me % myMasses % m * phil )**2
+            fcn_result  = me % myExtents % at * sqrt ( V ) / &
+                        ( me % myExtents % as**3 * ( me % myExtents % at**2 * V + dphil**2 ) )
+     end function aA
+
+    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+
+    subroutine update_f_fcn ( me )
 
         class ( fields ), target :: me
 
         type ( extents ), pointer :: ex
 
-        real ( rp ) :: oldf, oldP, newP, rdn
+        real ( rp ) :: oldf, oldP, newP, rdn, df
 
         integer ( ip ) :: sweep
         integer ( ip ) :: i,  j,  k,  l,  &
@@ -59,47 +122,48 @@ contains
                 ido: do i = 1, ex % Ns
                     iu = me % ups ( i )
                     id = me % dns ( i )
-                    do j = 1, ex % Ns
+                    jdo: do j = 1, ex % Ns
                         ju = me % ups ( j )
                         jd = me % dns ( j )
-                        do k = 1, ex % Ns
+                        kdo: do k = 1, ex % Ns
                             ku = me % ups ( k )
                             kd = me % dns ( k )
                             ldo: do l = 1, ex % Nt ! time
                                 lu = me % upt ( l )
                                 ld = me % dnt ( l )
                                 oldf = me % f ( i, j, k, l )
-                                oldP = me % aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
-                                     * me % aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
-                                     * me % aA (  i, ju, ku, lu, id,  j,  k,  l ) &
-                                     * me % aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
-                                     * me % aA ( iu, ju,  k, lu,  i,  j, kd,  l )
+                                oldP = aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
+                                     * aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
+                                     * aA (  i, ju, ku, lu, id,  j,  k,  l ) &
+                                     * aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
+                                     * aA ( iu, ju,  k, lu,  i,  j, kd,  l )
                                 call random_number ( rdn )
                                 me % f ( i, j, k, l ) = oldf + df * ( rdn - half )
-                                newP = me % aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
-                                     * me % aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
-                                     * me % aA (  i, ju, ku, lu, id,  j,  k,  l ) &
-                                     * me % aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
-                                     * me % aA ( iu, ju,  k, lu,  i,  j, kd,  l )
+                                newP = aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
+                                     * aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
+                                     * aA (  i, ju, ku, lu, id,  j,  k,  l ) &
+                                     * aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
+                                     * aA ( iu, ju,  k, lu,  i,  j, kd,  l )
                                 if ( newP >= oldP ) then ! accept
-                                    me % naccept = me % naccept + one
+                                    me % naccept = me % naccept + 1
                                 else
                                     call random_number ( rdn )
                                     if ( newP/oldP >= rdn ) then ! accept
-                                        me % naccept = me % naccept + one
+                                        me % naccept = me % naccept + 1
                                     else ! reject
-                                        me % nreject = me % nreject + one
+                                        me % nreject = me % nreject + 1
                                         me % f ( i, j, k, l )  = oldf
                                     end if
                                 end if
                             end do ldo
-                        end do
-                    end do
+                        end do kdo
+                    end do jdo
                 end do ido
+            end do sweepdo
 
             ex => null ( )
 
-    end subroutine update_f
+    end subroutine update_f_fcn
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
