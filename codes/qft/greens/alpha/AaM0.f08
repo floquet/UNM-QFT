@@ -4,7 +4,7 @@ program AaM0
     use, intrinsic :: iso_fortran_env,  only : compiler_version, compiler_options
 
     use mConstants,                     only : stdout, zero, one, mySeed, biggest, mille
-    use mFields,                        only : housekeeping_sub, fields
+    use mFields,                        only : fields
     use mFileHandling,                  only : safeopen_readonly
     use mExtents,                       only : extents
     use mMasses,                        only : masses
@@ -33,6 +33,7 @@ program AaM0
 
     ! derived types
     type ( fields ),  target  :: myFields
+    type ( inputs )           :: myInputs
     type ( extents ), pointer :: extent => null ( )
     type ( masses ),  pointer :: mass   => null ( )
 
@@ -62,7 +63,11 @@ program AaM0
                                                                                extent % Ndphi
             read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) extent % as, extent % at, &
                                                                                mass % Mass, mass % m, df
-            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) tablename, temp, root, farray, index
+            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) myInputs % tablename, &
+                                                                               myInputs % temp, &
+                                                                               myInputs % root, &
+                                                                               myInputs % farray, &
+                                                                               myInputs % index
             read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) extent % Nsweeps, &
                                                                                extent % Ns, &
                                                                                extent % Nt
@@ -73,7 +78,7 @@ program AaM0
             write ( stdout, 100 ) 'extent % Nphi = ', extent % Nphi
             write ( stdout, 100 ) 'myFields % myExtents % Ngphi = ', myFields % myExtents % Ngphi
 
-            call housekeeping_sub ( myFields )
+            call myFields % housekeeping ( )  ! allocate, initialize
 
             ! loop over parameter sets
             success = load_parameter_sets_fcn ( )
@@ -92,7 +97,11 @@ program AaM0
                 dphistep = maxDphi / real ( extent % Ndphi, rp )
 
                 call myFields % thermalize ( temp = temp, farray = farray )
-                call myFields % update_f ( )
+                write ( stdout, 100 ) 'thermalized: farray = ', farray
+                call myFields % update_f ( df = df )
+                write ( stdout, 100 ) 'updated'
+                call myFields % greens_two_point ( )
+                call myFields % compute_sigma ( )
 
             end do ! kPS
             extent => null ( )

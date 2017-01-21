@@ -8,7 +8,8 @@
 !  functions
 !   safeopen_readonly
 !   safeopen_readwrite
-!   safeopen_writene! Tomas Mondragon
+!   safeopen_writenew
+! Tomas Mondragon
 ! Computer Scientist
 ! USACE ERDC Information Technology Laboratory
 ! Computational Analysis Branch

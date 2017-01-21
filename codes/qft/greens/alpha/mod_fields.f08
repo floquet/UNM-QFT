@@ -2,7 +2,7 @@ module mFields
 
     use mConstants,                     only : one, zero, half, stdout, mille
     use mExtents,                       only : extents
-    use mFileHandling,                  only : safeopen_readonly
+    use mFileHandling,                  only : safeopen_readonly, safeopen_writenew, find_IU_info
     use mMasses,                        only : masses
     use mSetPrecision,                  only : ip, rp
 
@@ -14,19 +14,25 @@ module mFields
         ! rank 3
         real ( rp ),    allocatable, dimension ( : , : , : )     :: A, C
         ! rank 1
-        real ( rp ),    allocatable, dimension ( : )             :: phi, gphi, dphi, E_0
+        real ( rp ),    allocatable, dimension ( : )             :: phi, gphi, dphi, E_0, E_0squared
         real ( rp ),                 dimension ( 0 : 3 )         :: G
         integer ( ip ), allocatable, dimension ( : )             :: ups, dns, upt, dnt
         ! rank 0
+        real ( rp ) :: meanE, sigma
+        real ( rp ) :: A_max, A_min, C_max, C_min
+        real ( rp ) :: ratio_accept, ratio_reject
         integer ( ip ) :: naccept, nreject
         ! spatial, temporal extents
         type ( extents ) :: myExtents
         type ( masses )  :: myMasses
      contains
          private
-         !procedure :: aA
-         procedure, public :: housekeeping => housekeeping_sub
-         procedure, public :: thermalize   => thermalize_sub
+         procedure :: aA
+         procedure, public :: update_f         => update_f_fcn
+         procedure, public :: thermalize       => thermalize_sub
+         procedure, public :: housekeeping     => housekeeping_sub
+         procedure, public :: compute_sigma    => compute_sigma_sub
+         procedure, public :: greens_two_point => greens_two_point_sub
          !procedure, public :: update_f     => update_f_fcn
         !procedure, private, nopass :: allocate_rank_1_rp_sub
     end type fields
@@ -37,11 +43,146 @@ module mFields
     character ( len = * ),   private, parameter :: error_fatal = 'Program halting in module mFields due to fatal error.'
 
     private :: aA
-    private :: allocate_rank_1_rp_sub, allocate_rank_3_rp_sub, allocate_rank_4_rp_sub
     private :: allocate_rank_1_ip_sub
-    private :: housekeeping_sub, thermalize_sub
+    private :: allocate_rank_1_rp_sub
+    private :: allocate_rank_3_rp_sub
+    private :: allocate_rank_4_rp_sub
+    private :: compute_sigma_sub
+    private :: extrema_sub
+    private :: greens_two_point_sub
+    private :: housekeeping_sub
+    private :: thermalize_sub
+    private :: update_f_fcn
+    private :: write_f_sub
 
 contains
+
+    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+
+    subroutine write_f_sub ( me, myInputs )
+
+        class ( fields ), target :: me
+
+        type  ( inputs ), intent ( in ) :: myInputs
+        ! locals
+        integer :: io_stat
+        character ( len = 256 ) :: io_msg
+
+            io_output = safeopen_readonly ( myInputs % farray )
+            write ( io_output, *, iostat = io_stat, iomsg = io_msg ) me * f
+            if ( iostat /= 0 ) then
+                write ( stdout, 100 ) 'Error attempting to write the rank 4 array f:'
+                write ( stdout, 100 ) 'shape ( f ) =', shape ( me % f )
+                write ( stdout, 100 ) 'number of elements in f = ', product ( shape ( me % f ) )
+                write ( stdout, 100 ) 'iomsg = ', trim ( io_msg ), '.'
+                write ( stdout, 100 ) 'iostat = ', iostat
+                call find_IU_info ( io_output )
+                write ( stdout, 100 ) 'Execution nervously continues...'
+            endif
+            close ( io_output )
+
+        return
+
+        100 format ( * ( g0 ) )
+        110 format ( * ( g0, ' ' ) )
+
+    end subroutine write_f_sub
+
+    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+
+    subroutine writer_sub ( me, io_output_handle, myInputs )
+
+        class ( fields ), target :: me
+
+        type  ( inputs ), intent ( in ) :: myInputs
+        !locals
+        type ( extents ), pointer :: ex
+        integer :: i, j, k
+
+            ex => me % myExtents
+
+            write ( io_output_handle, 100 ) 'maxPhi,    maxGphi,    maxDphi'
+            write ( io_output_handle, 200 ) maxPhi, maxGphi, maxDphi
+
+            write ( io_output_handle, 100 ) 'Nphi,   Ngphi,    Ndphi'
+            write ( io_output_handle, 210 ) ex % Nphi, ex % Ngphi, ex % Ndphi
+
+            write ( io_output_handle, 100 ) 'as,   at,   Mass,   m,   df'
+            write ( io_output_handle, 210 ) ex % as, ex % at, me % masses % Mass, me % masses % m, ex % df
+
+            write ( io_output_handle, 100 ) 'tablename,     temp,    root,    farray,    index'
+            write ( io_output_handle, 220 ) trim ( myInputs % tablename ), ' hot ', &
+                                            trim ( myInputs % root ),      '  ',    &
+                                            trim ( myInputs % farray ),    myInputs % index + 1
+
+            write ( io_output_handle, 100 ) 'Nsweeps,   Ns,   Nt'
+            write ( io_output_handle, 210 ) ex % Nsweeps, ex % Ns, ex % Nt
+            ex => null ( )
+
+            write ( io_output_handle, 100 ) 'Results from run ', index
+            write ( io_output_handle, 100 ) 'E_0 = ', me % meanE, ', sigma = ', me % sigma
+
+            do k = 0, 3
+                write ( io_output_handle, 100 ) 'G( ', k, ' ) = ', me % G ( k ) / ex % kount
+            end do
+
+            write ( io_output_handle, 100 ) 'minimum of A = ', me % A_min
+            write ( io_output_handle, 100 ) 'maximum of A = ', me % A_max
+
+            write ( io_output_handle, 100 ) 'minimum of C = ', me % C_min
+            write ( io_output_handle, 100 ) 'maximum of C = ', me % C_max
+
+            write ( io_output_handle, 100 ) 'highphi  =', highphi
+            write ( io_output_handle, 100 ) 'highgphi =', highgphi
+            write ( io_output_handle, 100 ) 'highdphi =', highdphi
+
+            i = int ( highphi  / phistep  ) + 1
+            j = int ( highgphi / gphistep ) + 1
+            k = int ( highdphi / dphistep ) + 1
+
+            write ( io_output_handle, 100 ) 'A ( highphi = ', i, ', highgphi = ', j, ', highdphi = ', k, ' ) = ', me % A ( i, j, k )
+
+            write ( io_output_handle, 100 ) 'out of table = ', outoftable
+            write ( io_output_handle, 100 ) 'minA = ', biggest
+
+        return
+
+    100 format ( * ( g0 ) )
+
+    200 format ( 3 ( f12.3 ) )
+    210 format ( 3 ( I10 ) )
+    220 format ( 5 ( f12.6 ) )
+    230 format ( 5 ( a ), I10 )
+
+    end subroutine writer_sub
+
+    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+
+    subroutine extrema_sub ( me )
+
+        class ( fields ), target :: me
+        !locals
+            me % A_max = maxval ( A )
+            me % A_min = minval ( A )
+
+            me % C_max = maxval ( C )
+            me % C_min = minval ( C )
+
+    end subroutine extrema_sub
+
+    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+
+    subroutine compute_sigma_sub ( me )
+
+        class ( fields ), target :: me
+        !locals
+        real ( rp ) :: meanE2
+
+            me % meanE  = sum ( me % E_0 )        / real ( me % myExtents % Nsweeps, rp )
+                 meanE2 = sum ( me % E_0squared ) / real ( me % myExtents % Nsweeps, rp )
+            me % sigma  = sqrt ( meanE2 - me % meanE ** 2 )
+
+    end subroutine compute_sigma_sub
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
@@ -56,6 +197,7 @@ contains
         integer ( ip ) :: i, j, k, l
         integer :: io_in_farray
 
+            ! read in a thermalized array or heat up a cold array
             if ( temp == 'hot' ) then
                 write ( stdout, 100 ) 'The temp is ', temp
                 io_in_farray = safeopen_readonly ( farray )
@@ -76,13 +218,16 @@ contains
                     write ( stdout, 100 ) 'Unrecognized temperature: should be "hot" or "cold". Input value was ', temp, '.'
                     stop 'Fatal error - I need to know the temperature.'
             end if
+
+            return
+
         100 format ( * ( g0 ) )
 
     end subroutine thermalize_sub
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
-    function aA ( iu, ju, ku, lu, i, j, k, l ) result ( fcn_result )
+    function aA ( me, iu, ju, ku, lu, i, j, k, l ) result ( fcn_result )
 
         class ( fields ), target :: me
 
@@ -103,13 +248,14 @@ contains
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
-    subroutine update_f_fcn ( me )
+    subroutine update_f_fcn ( me, df )
 
         class ( fields ), target :: me
 
         type ( extents ), pointer :: ex
 
         real ( rp ) :: oldf, oldP, newP, rdn, df
+        real ( rp ) :: total
 
         integer ( ip ) :: sweep
         integer ( ip ) :: i,  j,  k,  l,  &
@@ -132,18 +278,18 @@ contains
                                 lu = me % upt ( l )
                                 ld = me % dnt ( l )
                                 oldf = me % f ( i, j, k, l )
-                                oldP = aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
-                                     * aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
-                                     * aA (  i, ju, ku, lu, id,  j,  k,  l ) &
-                                     * aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
-                                     * aA ( iu, ju,  k, lu,  i,  j, kd,  l )
+                                oldP = me % aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
+                                     * me % aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
+                                     * me % aA (  i, ju, ku, lu, id,  j,  k,  l ) &
+                                     * me % aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
+                                     * me % aA ( iu, ju,  k, lu,  i,  j, kd,  l )
                                 call random_number ( rdn )
                                 me % f ( i, j, k, l ) = oldf + df * ( rdn - half )
-                                newP = aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
-                                     * aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
-                                     * aA (  i, ju, ku, lu, id,  j,  k,  l ) &
-                                     * aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
-                                     * aA ( iu, ju,  k, lu,  i,  j, kd,  l )
+                                newP = me % aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
+                                     * me % aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
+                                     * me % aA (  i, ju, ku, lu, id,  j,  k,  l ) &
+                                     * me % aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
+                                     * me % aA ( iu, ju,  k, lu,  i,  j, kd,  l )
                                 if ( newP >= oldP ) then ! accept
                                     me % naccept = me % naccept + 1
                                 else
@@ -159,24 +305,26 @@ contains
                         end do kdo
                     end do jdo
                 end do ido
+                call greens_two_point_sub ( me )
+                me % E_0 ( sweep ) = ex % avolume
             end do sweepdo
 
             ex => null ( )
+
+            total = real ( me % naccept + me % nreject, rp )
+            ratio_accept = real ( me % naccept ) / total
+            ratio_reject = real ( me % nreject ) / total
 
     end subroutine update_f_fcn
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
-    subroutine greens_two_point ( me )
+    subroutine greens_two_point_sub ( me )
 
         class ( fields ), target :: me
 
-        !real ( rp ), intent ( in ) :: as, at
         ! locals
         integer ( ip ) :: i, j, k, l, iu, ju, ku, lu, luu, luuu
-        !real ( rp ) :: Esweep
-
-            !Esweep = zero
 
             do i = 1, me % myExtents % Ns
                 iu = me % ups ( i )
@@ -194,9 +342,8 @@ contains
                     end do
                 end do
             end do
-            !  % E_0 ( sweep ) = me % myExtents % volume_ip / me % myExtents % avolume / me % volume_rp
 
-    end subroutine greens_two_point
+    end subroutine greens_two_point_sub
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
@@ -231,10 +378,11 @@ contains
                                                   me % myExtents % Ngphi + 1, &
                                                   me % myExtents % Ndphi + 1 )
             ! rank 1
-            call allocate_rank_1_rp_sub ( me % phi,  me % myExtents % Nphi + 1 )
-            call allocate_rank_1_rp_sub ( me % gphi, me % myExtents % Nphi + 1 )
-            call allocate_rank_1_rp_sub ( me % dphi, me % myExtents % Nphi + 1 )
-            call allocate_rank_1_rp_sub ( me % E_0,  me % myExtents % Nsweeps )
+            call allocate_rank_1_rp_sub ( me % phi,         me % myExtents % Nphi + 1 )
+            call allocate_rank_1_rp_sub ( me % gphi,        me % myExtents % Nphi + 1 )
+            call allocate_rank_1_rp_sub ( me % dphi,        me % myExtents % Nphi + 1 )
+            call allocate_rank_1_rp_sub ( me % E_0,         me % myExtents % Nsweeps )
+            call allocate_rank_1_rp_sub ( me % E_0squared,  me % myExtents % Nsweeps )
             ! pbc
             call allocate_rank_1_ip_sub ( me % ups,  me % myExtents % Ns )
             call allocate_rank_1_ip_sub ( me % dns,  me % myExtents % Ns )
@@ -277,6 +425,8 @@ contains
                 stop error_fatal
             end if
 
+            array ( : , : , : , : ) = zero
+
         return
 
     100 format ( * ( g0 ) )
@@ -315,6 +465,8 @@ contains
                 stop error_fatal
             end if
 
+            array ( : , : , : ) = zero
+
         return
 
     100 format ( * ( g0 ) )
@@ -349,6 +501,8 @@ contains
                 stop error_fatal
             end if
 
+            array ( : ) = zero
+
         return
 
     100 format ( * ( g0 ) )
@@ -382,6 +536,8 @@ contains
                 write ( stdout, 100 ) 'error number:  ', alloc_status
                 stop error_fatal
             end if
+
+            array ( : ) = 0
 
         return
 
