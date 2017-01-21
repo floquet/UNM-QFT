@@ -9,8 +9,10 @@ module mExtents
         integer ( ip ) :: Nsweeps, Ns, Nt
         integer ( ip ) :: volume_ip
         integer ( ip ) :: kount
+        real ( rp ) :: phistep, gphistep, dphistep
+        real ( rp ) :: maxPhi, maxGPhi, maxDPhi, outoftable
+        real ( rp ) :: as, at, df
         real ( rp ) :: volume_rp
-        real ( rp ) :: as, at
         real ( rp ) :: avolume
     contains
         private

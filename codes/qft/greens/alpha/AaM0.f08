@@ -4,9 +4,10 @@ program AaM0
     use, intrinsic :: iso_fortran_env,  only : compiler_version, compiler_options
 
     use mConstants,                     only : stdout, zero, one, mySeed, biggest, mille
+    use mExtents,                       only : extents
     use mFields,                        only : fields
     use mFileHandling,                  only : safeopen_readonly
-    use mExtents,                       only : extents
+    use mInputs,                        only : inputs
     use mMasses,                        only : masses
     use mParameterSets,                 only : nParameterSets, ParameterCollection, load_parameter_sets_fcn
     use mRandoms,                       only : init_random_seed_sub!, SeedUsed
@@ -18,26 +19,22 @@ program AaM0
 
     ! rank 1
     ! rank 0
-    real ( rp ) :: maxPhi = zero, maxGphi = zero, maxDphi = zero
-    real ( rp ) :: df = zero
     real ( rp ) :: cpu_time_start = zero, cpu_time_stop = zero, cpu_time_elapsed = zero
     real ( rp ) :: random = zero
-    real ( rp ) :: highphi = zero, highgphi = zero, highdphi = zero
     real ( rp ) :: minA = biggest, outoftable = zero
-    real ( rp ) :: phistep = zero, gphistep = zero, dphistep = zero
-    real ( rp ) :: E = zero, E_0 = 0
 
-    integer ( ip ) :: index = 0
     integer        :: io_in_run_parameters = 0, io_in_farray = 0, success = -1
     integer ( ip ) :: i = 0, j = 0, k = 0, l = 0, kPS = 0
 
     ! derived types
     type ( fields ),  target  :: myFields
-    type ( inputs )           :: myInputs
-    type ( extents ), pointer :: extent => null ( )
-    type ( masses ),  pointer :: mass   => null ( )
+    type ( inputs ),  target  :: myInputs
 
-    character ( len = 64 ) :: tablename = '', temp = '', farray = '', root = ''
+    type ( extents ), pointer :: ex   => null ( )
+    type ( masses ),  pointer :: mass => null ( )
+    type ( inputs ),  pointer :: in   => null ( )
+
+    !character ( len = 64 ) :: tablename = '', temp = '', farray = '', root = ''
     character ( len = *  ), parameter :: input_file = 'inM0m1a.1'
 
         call cpu_time ( cpu_time_start )
@@ -54,29 +51,27 @@ program AaM0
             io_in_run_parameters = safeopen_readonly ( input_file )
             write ( stdout, 100 ) 'Reading parameters in file ', input_file, '.'
 
-            ! ./AaM0 < input_file
-            extent => myFields % myExtents
+            ex     => myFields % myExtents
             mass   => myFields % myMasses
-            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) maxPhi, maxGphi, maxDphi
-            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) extent % Nphi, &
-                                                                               extent % Ngphi, &
-                                                                               extent % Ndphi
-            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) extent % as, extent % at, &
-                                                                               mass % Mass, mass % m, df
-            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) myInputs % tablename, &
-                                                                               myInputs % temp, &
-                                                                               myInputs % root, &
-                                                                               myInputs % farray, &
-                                                                               myInputs % index
-            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) extent % Nsweeps, &
-                                                                               extent % Ns, &
-                                                                               extent % Nt
+            in     => myInputs
+            ! ./AaM0 < input_file
+            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) ex % maxPhi, ex % maxGphi, ex % maxDphi
+            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) ex % Nphi, &
+                                                                               ex % Ngphi, &
+                                                                               ex % Ndphi
+            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) ex % as, ex % at, &
+                                                                               mass % Mass, mass % m, ex % df
+            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) in % tablename, &
+                                                                               in % temp, &
+                                                                               in % root, &
+                                                                               in % farray, &
+                                                                               in % index
+            read ( io_in_run_parameters, * ); read ( io_in_run_parameters, * ) ex % Nsweeps, &
+                                                                               ex % Ns, &
+                                                                               ex % Nt
             close ( io_in_run_parameters )
 
-            call extent % volume ( )
-
-            write ( stdout, 100 ) 'extent % Nphi = ', extent % Nphi
-            write ( stdout, 100 ) 'myFields % myExtents % Ngphi = ', myFields % myExtents % Ngphi
+            call ex % volume ( ) ! build volume parameters
 
             call myFields % housekeeping ( )  ! allocate, initialize
 
@@ -85,27 +80,29 @@ program AaM0
             if ( success /= 0 ) stop 'Fatal error: parameter sets failed to load.'
 
             do kPS = 1, nParameterSets
-                mass   % Mass = ParameterCollection ( kPS ) % Mass
-                mass   % m    = ParameterCollection ( kPS ) % m
-                extent % at   = ParameterCollection ( kPS ) % at
-                extent % as   = ParameterCollection ( kPS ) % a
+                mass % Mass = ParameterCollection ( kPS ) % Mass
+                mass % m    = ParameterCollection ( kPS ) % m
+                ex   % at   = ParameterCollection ( kPS ) % at
+                ex   % as   = ParameterCollection ( kPS ) % a
                 write ( stdout, 100 ) kPS, ': Mass = ', mass % Mass
                 write ( stdout, 100 ) kPS, ': m    = ', mass % m
 
-                phistep  = maxPhi  / real ( extent % Nphi,  rp )
-                gphistep = maxGphi / real ( extent % Ngphi, rp )
-                dphistep = maxDphi / real ( extent % Ndphi, rp )
+                ex % phistep  = ex % maxPhi  / real ( ex % Nphi,  rp )
+                ex % gphistep = ex % maxGphi / real ( ex % Ngphi, rp )
+                ex % dphistep = ex % maxDphi / real ( ex % Ndphi, rp )
 
-                call myFields % thermalize ( temp = temp, farray = farray )
-                write ( stdout, 100 ) 'thermalized: farray = ', farray
-                call myFields % update_f ( df = df )
+                call myFields % thermalize ( temp = in % temp, farray = in % farray )
+                write ( stdout, 100 ) 'thermalized: farray = ', in % farray
+                call myFields % update_f ( df = ex % df )
                 write ( stdout, 100 ) 'updated'
                 call myFields % greens_two_point ( )
                 call myFields % compute_sigma ( )
+                call myFields % writer ( io_output_handle = stdout, myInputs = myInputs )
 
             end do ! kPS
-            extent => null ( )
-            mass   => null ( )
+            ex   => null ( )
+            mass => null ( )
+            in   => null ( )
 
         call cpu_time ( cpu_time_stop  )
         cpu_time_elapsed = cpu_time_stop - cpu_time_start
@@ -166,7 +163,7 @@ end program AaM0
 ! 9. 0.87860794998854819
 ! 10. 0.45900666593867046E-001
 ! Reading parameters in file inM0m1a.1.
-! extent % Nphi = 100
+! ex % Nphi = 100
 ! myFields % myExtents % Ngphi = 100
 !
 ! Parameter sets loaded.

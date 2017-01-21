@@ -1,8 +1,9 @@
 module mFields
 
-    use mConstants,                     only : one, zero, half, stdout, mille
+    use mConstants,                     only : one, zero, half, stdout, mille, biggest
     use mExtents,                       only : extents
     use mFileHandling,                  only : safeopen_readonly, safeopen_writenew, find_IU_info
+    use mInputs,                        only : inputs
     use mMasses,                        only : masses
     use mSetPrecision,                  only : ip, rp
 
@@ -21,6 +22,7 @@ module mFields
         real ( rp ) :: meanE, sigma
         real ( rp ) :: A_max, A_min, C_max, C_min
         real ( rp ) :: ratio_accept, ratio_reject
+        real ( rp ) :: highphi, highgphi, highdphi
         integer ( ip ) :: naccept, nreject
         ! spatial, temporal extents
         type ( extents ) :: myExtents
@@ -28,6 +30,7 @@ module mFields
      contains
          private
          procedure :: aA
+         procedure, public :: writer           => writer_sub
          procedure, public :: update_f         => update_f_fcn
          procedure, public :: thermalize       => thermalize_sub
          procedure, public :: housekeeping     => housekeeping_sub
@@ -53,6 +56,7 @@ module mFields
     private :: housekeeping_sub
     private :: thermalize_sub
     private :: update_f_fcn
+    private :: writer_sub
     private :: write_f_sub
 
 contains
@@ -65,17 +69,17 @@ contains
 
         type  ( inputs ), intent ( in ) :: myInputs
         ! locals
-        integer :: io_stat
+        integer :: io_output, io_stat
         character ( len = 256 ) :: io_msg
 
             io_output = safeopen_readonly ( myInputs % farray )
-            write ( io_output, *, iostat = io_stat, iomsg = io_msg ) me * f
-            if ( iostat /= 0 ) then
+            write ( io_output, *, iostat = io_stat, iomsg = io_msg ) me % f
+            if ( io_stat /= 0 ) then
                 write ( stdout, 100 ) 'Error attempting to write the rank 4 array f:'
-                write ( stdout, 100 ) 'shape ( f ) =', shape ( me % f )
+                write ( stdout, 110 ) 'shape ( f ) =', shape ( me % f )
                 write ( stdout, 100 ) 'number of elements in f = ', product ( shape ( me % f ) )
                 write ( stdout, 100 ) 'iomsg = ', trim ( io_msg ), '.'
-                write ( stdout, 100 ) 'iostat = ', iostat
+                write ( stdout, 100 ) 'iostat = ', io_stat
                 call find_IU_info ( io_output )
                 write ( stdout, 100 ) 'Execution nervously continues...'
             endif
@@ -94,36 +98,38 @@ contains
 
         class ( fields ), target :: me
 
-        type  ( inputs ), intent ( in ) :: myInputs
+        type  ( inputs ), intent ( in ), target :: myInputs
+        integer,          intent ( in )         :: io_output_handle
         !locals
         type ( extents ), pointer :: ex
+        type ( inputs ),  pointer :: in
         integer :: i, j, k
 
             ex => me % myExtents
+            in => myInputs
 
             write ( io_output_handle, 100 ) 'maxPhi,    maxGphi,    maxDphi'
-            write ( io_output_handle, 200 ) maxPhi, maxGphi, maxDphi
+            write ( io_output_handle, 200 ) ex % maxPhi, ex % maxGphi, ex % maxDphi
 
             write ( io_output_handle, 100 ) 'Nphi,   Ngphi,    Ndphi'
             write ( io_output_handle, 210 ) ex % Nphi, ex % Ngphi, ex % Ndphi
 
             write ( io_output_handle, 100 ) 'as,   at,   Mass,   m,   df'
-            write ( io_output_handle, 210 ) ex % as, ex % at, me % masses % Mass, me % masses % m, ex % df
+            write ( io_output_handle, 220 ) ex % as, ex % at, me % myMasses % Mass, me % myMasses % m, ex % df
 
             write ( io_output_handle, 100 ) 'tablename,     temp,    root,    farray,    index'
-            write ( io_output_handle, 220 ) trim ( myInputs % tablename ), ' hot ', &
-                                            trim ( myInputs % root ),      '  ',    &
-                                            trim ( myInputs % farray ),    myInputs % index + 1
+            write ( io_output_handle, 230 ) trim ( in % tablename ), ' hot ', &
+                                            trim ( in % root ),      '  ',    &
+                                            trim ( in % farray ),    in % index + 1
 
             write ( io_output_handle, 100 ) 'Nsweeps,   Ns,   Nt'
             write ( io_output_handle, 210 ) ex % Nsweeps, ex % Ns, ex % Nt
-            ex => null ( )
 
-            write ( io_output_handle, 100 ) 'Results from run ', index
+            write ( io_output_handle, 100 ) 'Results from run ', in % index
             write ( io_output_handle, 100 ) 'E_0 = ', me % meanE, ', sigma = ', me % sigma
 
             do k = 0, 3
-                write ( io_output_handle, 100 ) 'G( ', k, ' ) = ', me % G ( k ) / ex % kount
+                write ( io_output_handle, 100 ) 'G( ', k, ' ) = ', me % G ( k ) / real ( ex % kount, rp )
             end do
 
             write ( io_output_handle, 100 ) 'minimum of A = ', me % A_min
@@ -132,18 +138,21 @@ contains
             write ( io_output_handle, 100 ) 'minimum of C = ', me % C_min
             write ( io_output_handle, 100 ) 'maximum of C = ', me % C_max
 
-            write ( io_output_handle, 100 ) 'highphi  =', highphi
-            write ( io_output_handle, 100 ) 'highgphi =', highgphi
-            write ( io_output_handle, 100 ) 'highdphi =', highdphi
+            write ( io_output_handle, 100 ) 'highphi  =', me % highphi
+            write ( io_output_handle, 100 ) 'highgphi =', me % highgphi
+            write ( io_output_handle, 100 ) 'highdphi =', me % highdphi
 
-            i = int ( highphi  / phistep  ) + 1
-            j = int ( highgphi / gphistep ) + 1
-            k = int ( highdphi / dphistep ) + 1
+            i = int ( me % highphi  / ex % phistep  ) + 1
+            j = int ( me % highgphi / ex % gphistep ) + 1
+            k = int ( me % highdphi / ex % dphistep ) + 1
 
             write ( io_output_handle, 100 ) 'A ( highphi = ', i, ', highgphi = ', j, ', highdphi = ', k, ' ) = ', me % A ( i, j, k )
 
-            write ( io_output_handle, 100 ) 'out of table = ', outoftable
+            write ( io_output_handle, 100 ) 'out of table = ', ex % outoftable
             write ( io_output_handle, 100 ) 'minA = ', biggest
+
+            ex => null ( )
+            in => null ( )
 
         return
 
@@ -162,11 +171,11 @@ contains
 
         class ( fields ), target :: me
         !locals
-            me % A_max = maxval ( A )
-            me % A_min = minval ( A )
+            me % A_max = maxval ( me % A )
+            me % A_min = minval ( me % A )
 
-            me % C_max = maxval ( C )
-            me % C_min = minval ( C )
+            me % C_max = maxval ( me % C )
+            me % C_min = minval ( me % C )
 
     end subroutine extrema_sub
 
@@ -312,8 +321,8 @@ contains
             ex => null ( )
 
             total = real ( me % naccept + me % nreject, rp )
-            ratio_accept = real ( me % naccept ) / total
-            ratio_reject = real ( me % nreject ) / total
+            me % ratio_accept = real ( me % naccept, rp ) / total
+            me % ratio_reject = real ( me % nreject, rp ) / total
 
     end subroutine update_f_fcn
 
@@ -353,9 +362,17 @@ contains
 
             call allocator_sub ( me ) ! allocate all arrays
             call neighbors_sub ( me ) ! populate pointers to neighbors
-            me % G ( : ) = zero
+
             me % naccept = 0
             me % nreject = 0
+
+            me % highphi  = zero
+            me % highgphi = zero
+            me % highdphi = zero
+
+            me % myExtents % outoftable = zero
+
+            me % G ( : ) = zero
 
     end subroutine housekeeping_sub
 
