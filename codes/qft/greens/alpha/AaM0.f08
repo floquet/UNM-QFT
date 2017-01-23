@@ -3,7 +3,7 @@ program AaM0
 
     use, intrinsic :: iso_fortran_env,  only : compiler_version, compiler_options
 
-    use mConstants,                     only : stdout, zero, one, mySeed, biggest, mille
+    use mConstants,                     only : stdout, zero, mySeed
     use mExtents,                       only : extents
     use mFields,                        only : fields
     use mFileHandling,                  only : safeopen_readonly
@@ -21,10 +21,8 @@ program AaM0
     ! rank 0
     real ( rp ) :: cpu_time_start = zero, cpu_time_stop = zero, cpu_time_elapsed = zero
     real ( rp ) :: random = zero
-    real ( rp ) :: minA = biggest, outoftable = zero
-
-    integer        :: io_in_run_parameters = 0, io_in_farray = 0, success = -1
-    integer ( ip ) :: i = 0, j = 0, k = 0, l = 0, kPS = 0
+    integer        :: io_in_run_parameters = 0, success = -1
+    integer ( ip ) :: k = 0, kPS = 0
 
     ! derived types
     type ( fields ),  target  :: myFields
@@ -124,66 +122,114 @@ program AaM0
 
 end program AaM0
 
-! rditldmt@ITLDMT-MD-O2034:alpha $ pwd
-! /Users/rditldmt/Documents/GitHub Desktop/UNM-QFT/codes/qft/greens/alpha
-! rditldmt@ITLDMT-MD-O2034:alpha $ date
-! Tue Jan 17 16:17:40 CST 2017
-! rditldmt@ITLDMT-MD-O2034:alpha $ make
+! dantopa@Muntz-Szasz.attlocal.net:alpha $ date
+! Sun Jan 22 14:59:33 CST 2017
+! dantopa@Muntz-Szasz.attlocal.net:alpha $ pwd
+! /Users/dantopa/Documents/GitHub_desktop/UNM-QFT/codes/qft/greens/alpha
+! dantopa@Muntz-Szasz.attlocal.net:alpha $ make
 ! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_set_precision.o mod_set_precision.f08
 ! make: Circular mod_constants.o <- mod_constants.o dependency dropped.
 ! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_constants.o mod_constants.f08
 ! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_extents.o mod_extents.f08
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_fields.o mod_fields.f08
-! mod_fields.f08:52:37:
-!
-!      function allocate_rank_1_fcn ( me, array, length ) result  ( fcn_success )
-!                                      1
-! Warning: Unused dummy argument 'me' at (1) [-Wunused-dummy-argument]
+! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_masses.o mod_masses.f08
 ! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_file_handling.o mod_file_handling.f08
+! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_inputs.o mod_inputs.f08
+! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_fields.o mod_fields.f08
+! mod_fields.f08:66:0:
+!
+!      subroutine write_f_sub ( me, myInputs )
+!
+! Warning: 'write_f_sub' defined but not used [-Wunused-function]
+! mod_fields.f08:170:0:
+!
+!      subroutine extrema_sub ( me )
+!
+! Warning: 'extrema_sub' defined but not used [-Wunused-function]
 ! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_parameter_sets.o mod_parameter_sets.f08
 ! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_randoms.o mod_randoms.f08
 ! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_time_stamp.o mod_time_stamp.f08
 ! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o AaM0.o AaM0.f08
-! AaM0.f08:94:7:
-!
-!      110 format ( * ( g0, ', ' ) )
-!        1
-! Warning: Label 110 at (1) defined but not used [-Wunused-label]
-! gfortran -g -o AaM0 AaM0.o mod_constants.o mod_extents.o mod_fields.o mod_file_handling.o mod_parameter_sets.o mod_randoms.o mod_set_precision.o mod_time_stamp.o
-! rditldmt@ITLDMT-MD-O2034:alpha $ ./AaM0
-! first 10 random numbers:
+! gfortran -g -o AaM0 AaM0.o mod_constants.o mod_extents.o mod_fields.o mod_file_handling.o mod_inputs.o mod_masses.o mod_parameter_sets.o mod_randoms.o mod_set_precision.o mod_time_stamp.o
+! dantopa@Muntz-Szasz.attlocal.net:alpha $ ./AaM0
+! first 5 random numbers:
 ! 1. 0.78157313515666638
 ! 2. 0.85276506658379059
 ! 3. 0.86172951474681547
 ! 4. 0.94357548881740327
 ! 5. 0.74924959946961245
-! 6. 0.52760745048508229
-! 7. 0.38451498498411230E-001
-! 8. 0.64528496827780668
-! 9. 0.87860794998854819
-! 10. 0.45900666593867046E-001
 ! Reading parameters in file inM0m1a.1.
-! ex % Nphi = 100
-! myFields % myExtents % Ngphi = 100
 !
 ! Parameter sets loaded.
 !
 ! 1: Mass = 1.0000000000000000
 ! 1: m    = 0.0000000000000000
+! The temp is cold
+! thermalized: farray = duh
+! updated
+! maxPhi,    maxGphi,    maxDphi
+!        2.000       2.000       2.000
+! Nphi,   Ngphi,    Ndphi
+!        100       100       100
+! as,   at,   Mass,   m,   df
+!     1.000000    1.000000    1.000000    0.000000    0.010000
+! tablename,     temp,    root,    farray,    index
+! tableM0m1a.1 hot M0m1a.1  duh         2
+! Nsweeps,   Ns,   Nt
+!       1000        20        20
+! Results from run 1
+! E_0 = 0.10000000000000183E-003, sigma = NaN
+! G( 0 ) = 0.50926127705580896E-006
+! G( 1 ) = 0.30436188976563380E-006
+! G( 2 ) = 0.26914277376277926E-006
+! G( 3 ) = 0.26059225043890117E-006
+! minimum of A = 0.0000000000000000
+! maximum of A = 0.0000000000000000
+! minimum of C = 0.0000000000000000
+! maximum of C = 0.0000000000000000
+! highphi  = 0.0000000000000000
+! highgphi = 0.0000000000000000
+! highdphi = 0.0000000000000000
+! A ( highphi = 1, highgphi = 1, highdphi = 1 ) = 0.0000000000000000
+! out of table = 0.0000000000000000
+! minA = 0.17976931348623157E+309
 ! 2: Mass = 0.0000000000000000
 ! 2: m    = 1.0000000000000000
+! The temp is cold
+! thermalized: farray = duh
+! updated
+! maxPhi,    maxGphi,    maxDphi
+!        2.000       2.000       2.000
+! Nphi,   Ngphi,    Ndphi
+!        100       100       100
+! as,   at,   Mass,   m,   df
+!     1.000000    1.000000    0.000000    1.000000    0.010000
+! tablename,     temp,    root,    farray,    index
+! tableM0m1a.1 hot M0m1a.1  duh         2
+! Nsweeps,   Ns,   Nt
+!       1000        20        20
+! Results from run 1
+! E_0 = 0.10000000000000183E-003, sigma = NaN
+! G( 0 ) = 0.11730241732807630E-005
+! G( 1 ) = 0.40461181515299013E-006
+! G( 2 ) = 0.29223647172478797E-006
+! G( 3 ) = 0.26947863812950206E-006
+! minimum of A = 0.0000000000000000
+! maximum of A = 0.0000000000000000
+! minimum of C = 0.0000000000000000
+! maximum of C = 0.0000000000000000
+! highphi  = 0.0000000000000000
+! highgphi = 0.0000000000000000
+! highdphi = 0.0000000000000000
+! A ( highphi = 1, highgphi = 1, highdphi = 1 ) = 0.0000000000000000
+! out of table = 0.0000000000000000
+! minA = 0.17976931348623157E+309
 !
-! cpu seconds: 0.67799999999999978E-003
-! timestamp: 2017-01-17  16:17:51  UCT-0600
+! cpu seconds: 92.362042000000002
+! timestamp: 2017-01-22  15:01:16  UCT-0600
 !
 ! Fortran compiler version: GCC version 7.0.0 20170115 (experimental)
 !
-! Fortran compilation options: -fPIC -feliminate-unused-debug-symbols -mmacosx-version-min=10.11.6 -mtune=core2 -auxbase-strip AaM0.o -g -Og -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Wpedantic -Wuse-without-only -ffpe-trap=denormal -fbacktrace -fcheck=bounds -fmax-errors=5
+! Fortran compilation options: -fPIC -feliminate-unused-debug-symbols -mmacosx-version-min=10.12.3 -mtune=core2 -auxbase-strip AaM0.o -g -Og -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Wpedantic -Wuse-without-only -ffpe-trap=denormal -fbacktrace -fcheck=bounds -fmax-errors=5
 !
+! Note: The following floating-point exceptions are signalling: IEEE_INVALID_FLAG
 ! STOP successful completion for AaM0.f08 . . .
-! rditldmt@ITLDMT-MD-O2034:alpha $ gcc --version
-! Configured with: --prefix=/Applications/Xcode.app/Contents/Developer/usr --with-gxx-include-dir=/usr/include/c++/4.2.1
-! Apple LLVM version 8.0.0 (clang-800.0.42.1)
-! Target: x86_64-apple-darwin15.6.0
-! Thread model: posix
-! InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
