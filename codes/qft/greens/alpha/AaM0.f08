@@ -13,7 +13,6 @@ program AaM0
     use mRandoms,                       only : init_random_seed_sub!, SeedUsed
     use mSetPrecision,                  only : ip, rp
     use mTimeStamp,                     only : timestamp
-    !use mFields,                        only : housekeeping_sub, fields
 
     implicit none
 
@@ -119,7 +118,6 @@ program AaM0
         stop 'successful completion for AaM0.f08 . . .'
 
     100 format ( * ( g0 ) )
-    !110 format ( * ( g0, ', ' ) )
 
 end program AaM0
 

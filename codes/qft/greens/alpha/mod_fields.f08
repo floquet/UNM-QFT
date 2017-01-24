@@ -23,10 +23,13 @@ module mFields
         real ( rp ) :: A_max, A_min, C_max, C_min
         real ( rp ) :: ratio_accept, ratio_reject
         real ( rp ) :: highphi, highgphi, highdphi
+
         integer ( ip ) :: naccept, nreject
-        ! spatial, temporal extents
-        type ( extents ) :: myExtents
+
+        ! derived types
+        type ( extents ) :: myExtents ! spatial, temporal extents
         type ( masses )  :: myMasses
+
      contains
          private
          procedure, private :: aA_fcn
@@ -39,19 +42,12 @@ module mFields
          procedure, public  :: housekeeping     => housekeeping_sub
          procedure, public  :: compute_sigma    => compute_sigma_sub
          procedure, public  :: greens_two_point => greens_two_point_sub
-         !procedure, public :: update_f     => update_f_sub
-        !procedure, private, nopass :: allocate_rank_1_rp_sub
     end type fields
 
     ! local variables
     character ( len = * ),   private, parameter :: error_fatal = 'Program halting in module mFields due to fatal error.'
 
-    !private :: aA_fcn
     private :: allocator_sub
-    ! private :: allocate_rank_1_ip_sub
-    ! private :: allocate_rank_1_rp_sub
-    ! private :: allocate_rank_3_rp_sub
-    ! private :: allocate_rank_4_rp_sub
     private :: compute_sigma_sub
     private :: extrema_sub
     private :: greens_two_point_sub
