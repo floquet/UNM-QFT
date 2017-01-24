@@ -132,7 +132,6 @@ contains
 
             do i = 1, me % myExtents % Ns
                 iu = me % ups ( i )
-                write ( stdout, fmt_generic ) i, '. G(0) = ', me % G(0), ', G(1) = ', me % G(1), ', G(2) = ', me % G(2)
                 do j = 1, me % myExtents % Ns
                     ju = me % ups ( j )
                     do k = 1, me % myExtents % Ns
@@ -248,7 +247,6 @@ contains
                 end do ido
                 call greens_two_point_sub ( me )
                 me % E_0 ( sweep ) = ex % avolume
-                write ( stdout, fmt_generic ) 'me % E_0 ( ', sweep, ' ) = ', me % E_0 ( sweep )
             end do sweepdo
 
             ex => null ( )

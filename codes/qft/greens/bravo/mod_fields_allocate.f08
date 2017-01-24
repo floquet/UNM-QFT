@@ -60,7 +60,6 @@ submodule ( mFields ) smFieldsAllocate
             call allocate_rank_1_rp_sub ( me % gphi,        me % myExtents % Nphi + 1 )
             call allocate_rank_1_rp_sub ( me % dphi,        me % myExtents % Nphi + 1 )
             call allocate_rank_1_rp_sub ( me % E_0,         me % myExtents % Nsweeps )
-            call allocate_rank_1_rp_sub ( me % E_0squared,  me % myExtents % Nsweeps )
             ! pbc
             call allocate_rank_1_ip_sub ( me % ups,  me % myExtents % Ns )
             call allocate_rank_1_ip_sub ( me % dns,  me % myExtents % Ns )

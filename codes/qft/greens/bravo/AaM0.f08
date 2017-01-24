@@ -118,17 +118,42 @@ program AaM0
 
 end program AaM0
 
-! rditldmt@ITLDMT-MD-O2034:alpha $ date
-! Mon Jan 23 18:21:42 CST 2017
-! rditldmt@ITLDMT-MD-O2034:alpha $ pwd
-! /Users/rditldmt/Documents/GitHub_Desktop/UNM-QFT/codes/qft/greens/alpha
-! rditldmt@ITLDMT-MD-O2034:alpha $ gcc --version
-! Configured with: --prefix=/Applications/Xcode.app/Contents/Developer/usr --with-gxx-include-dir=/usr/include/c++/4.2.1
-! Apple LLVM version 8.0.0 (clang-800.0.42.1)
-! Target: x86_64-apple-darwin15.6.0
-! Thread model: posix
-! InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-! rditldmt@ITLDMT-MD-O2034:alpha $ ./AaM0
+! rditldmt@ITLDMT-MD-O2034:bravo $ date
+! Tue Jan 24 16:30:56 CST 2017
+! rditldmt@ITLDMT-MD-O2034:bravo $ pwd
+! /Users/rditldmt/Documents/GitHub_Desktop/UNM-QFT/codes/qft/greens/bravo
+! rditldmt@ITLDMT-MD-O2034:bravo $ make
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_set_precision.o mod_set_precision.f08
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_constants.o mod_constants.f08
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_extents.o mod_extents.f08
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_masses.o mod_masses.f08
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_file_handling.o mod_file_handling.f08
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_inputs.o mod_inputs.f08
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_fields.o mod_fields.f08
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_fields_allocate.o mod_fields_allocate.f08
+! mod_fields_allocate.f08:2:19:
+!
+!  submodule ( mFields ) smFieldsAllocate
+!                    1
+! Warning: USE statement at (1) has no ONLY qualifier [-Wuse-without-only]
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_fields_output.o mod_fields_output.f08
+! mod_fields_output.f08:2:19:
+!
+!  submodule ( mFields ) smFieldsOutput
+!                    1
+! Warning: USE statement at (1) has no ONLY qualifier [-Wuse-without-only]
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_fields_utilities.o mod_fields_utilities.f08
+! mod_fields_utilities.f08:2:19:
+!
+!  submodule ( mFields ) smFieldsUtilities
+!                    1
+! Warning: USE statement at (1) has no ONLY qualifier [-Wuse-without-only]
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_parameter_sets.o mod_parameter_sets.f08
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_randoms.o mod_randoms.f08
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_time_stamp.o mod_time_stamp.f08
+! gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o AaM0.o AaM0.f08
+! gfortran -g -o AaM0 AaM0.o mod_constants.o mod_extents.o mod_fields.o mod_fields_allocate.o mod_fields_output.o mod_fields_utilities.o mod_file_handling.o mod_inputs.o mod_masses.o mod_parameter_sets.o mod_randoms.o mod_set_precision.o mod_time_stamp.o
+! rditldmt@ITLDMT-MD-O2034:bravo $ ./AaM0
 ! first 5 random numbers:
 ! 1. 0.78157313515666638
 ! 2. 0.85276506658379059
@@ -144,70 +169,14 @@ end program AaM0
 ! The temp is cold
 ! thermalized: farray = duh
 ! updated
-! maxPhi,    maxGphi,    maxDphi
-!        2.000       2.000       2.000
-! Nphi,   Ngphi,    Ndphi
-!        100       100       100
-! as,   at,   Mass,   m,   df
-!     1.000000    1.000000    1.000000    0.000000    0.010000
-! tablename,     temp,    root,    farray,    index
-! tableM0m1a.1 hot M0m1a.1  duh         2
-! Nsweeps,   Ns,   Nt
-!       1000        20        20
-! Results from run 1
-! E_0 = 0.10000000000000183E-003, sigma = NaN
-! G( 0 ) = 0.50926127705580896E-006
-! G( 1 ) = 0.30436188976563380E-006
-! G( 2 ) = 0.26914277376277926E-006
-! G( 3 ) = 0.26059225043890117E-006
-! minimum of A = 0.0000000000000000
-! maximum of A = 0.0000000000000000
-! minimum of C = 0.0000000000000000
-! maximum of C = 0.0000000000000000
-! highphi  = 0.0000000000000000
-! highgphi = 0.0000000000000000
-! highdphi = 0.0000000000000000
-! A ( highphi = 1, highgphi = 1, highdphi = 1 ) = 0.0000000000000000
-! out of table = 0.0000000000000000
-! minA = 0.17976931348623157E+309
-! 2: Mass = 0.0000000000000000
-! 2: m    = 1.0000000000000000
-! The temp is cold
-! thermalized: farray = duh
-! updated
-! maxPhi,    maxGphi,    maxDphi
-!        2.000       2.000       2.000
-! Nphi,   Ngphi,    Ndphi
-!        100       100       100
-! as,   at,   Mass,   m,   df
-!     1.000000    1.000000    0.000000    1.000000    0.010000
-! tablename,     temp,    root,    farray,    index
-! tableM0m1a.1 hot M0m1a.1  duh         2
-! Nsweeps,   Ns,   Nt
-!       1000        20        20
-! Results from run 1
-! E_0 = 0.10000000000000183E-003, sigma = NaN
-! G( 0 ) = 0.11730241732807630E-005
-! G( 1 ) = 0.40461181515299013E-006
-! G( 2 ) = 0.29223647172478797E-006
-! G( 3 ) = 0.26947863812950206E-006
-! minimum of A = 0.0000000000000000
-! maximum of A = 0.0000000000000000
-! minimum of C = 0.0000000000000000
-! maximum of C = 0.0000000000000000
-! highphi  = 0.0000000000000000
-! highgphi = 0.0000000000000000
-! highdphi = 0.0000000000000000
-! A ( highphi = 1, highgphi = 1, highdphi = 1 ) = 0.0000000000000000
-! out of table = 0.0000000000000000
-! minA = 0.17976931348623157E+309
 !
-! cpu seconds: 315.17698100000001
-! timestamp: 2017-01-23  18:27:37  UCT-0600
+! Program received signal SIGFPE: Floating-point exception - erroneous arithmetic operation.
 !
-! Fortran compiler version: GCC version 7.0.0 20170115 (experimental)
-!
-! Fortran compilation options: -fPIC -feliminate-unused-debug-symbols -mmacosx-version-min=10.11.6 -mtune=core2 -auxbase-strip AaM0.o -g -Og -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Wpedantic -Wuse-without-only -ffpe-trap=denormal -fbacktrace -fcheck=bounds -fmax-errors=5
-!
-! Note: The following floating-point exceptions are signalling: IEEE_INVALID_FLAG
-! STOP successful completion for AaM0.f08 . . .
+! Backtrace for this error:
+#0  0x102408045
+#1  0x10240782a
+#2  0x7fff90f9b529
+#3  0x1023f4d84
+#4  0x1023ee62a
+#5  0x1023f75e7
+Floating point exception: 8
