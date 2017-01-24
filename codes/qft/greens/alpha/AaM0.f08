@@ -95,6 +95,7 @@ program AaM0
                 write ( stdout, 100 ) 'updated'
                 call myFields % greens_two_point ( )
                 call myFields % compute_sigma ( )
+                call myFields % extrema ( )
                 call myFields % writer ( io_output_handle = stdout, myInputs = myInputs )
 
             end do ! kPS
@@ -122,35 +123,17 @@ program AaM0
 
 end program AaM0
 
-! dantopa@Muntz-Szasz.attlocal.net:alpha $ date
-! Sun Jan 22 14:59:33 CST 2017
-! dantopa@Muntz-Szasz.attlocal.net:alpha $ pwd
-! /Users/dantopa/Documents/GitHub_desktop/UNM-QFT/codes/qft/greens/alpha
-! dantopa@Muntz-Szasz.attlocal.net:alpha $ make
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_set_precision.o mod_set_precision.f08
-! make: Circular mod_constants.o <- mod_constants.o dependency dropped.
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_constants.o mod_constants.f08
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_extents.o mod_extents.f08
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_masses.o mod_masses.f08
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_file_handling.o mod_file_handling.f08
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_inputs.o mod_inputs.f08
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_fields.o mod_fields.f08
-! mod_fields.f08:66:0:
-!
-!      subroutine write_f_sub ( me, myInputs )
-!
-! Warning: 'write_f_sub' defined but not used [-Wunused-function]
-! mod_fields.f08:170:0:
-!
-!      subroutine extrema_sub ( me )
-!
-! Warning: 'extrema_sub' defined but not used [-Wunused-function]
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_parameter_sets.o mod_parameter_sets.f08
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_randoms.o mod_randoms.f08
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_time_stamp.o mod_time_stamp.f08
-! gfortran -c -g -ffpe-trap=denormal -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o AaM0.o AaM0.f08
-! gfortran -g -o AaM0 AaM0.o mod_constants.o mod_extents.o mod_fields.o mod_file_handling.o mod_inputs.o mod_masses.o mod_parameter_sets.o mod_randoms.o mod_set_precision.o mod_time_stamp.o
-! dantopa@Muntz-Szasz.attlocal.net:alpha $ ./AaM0
+! rditldmt@ITLDMT-MD-O2034:alpha $ date
+! Mon Jan 23 18:21:42 CST 2017
+! rditldmt@ITLDMT-MD-O2034:alpha $ pwd
+! /Users/rditldmt/Documents/GitHub_Desktop/UNM-QFT/codes/qft/greens/alpha
+! rditldmt@ITLDMT-MD-O2034:alpha $ gcc --version
+! Configured with: --prefix=/Applications/Xcode.app/Contents/Developer/usr --with-gxx-include-dir=/usr/include/c++/4.2.1
+! Apple LLVM version 8.0.0 (clang-800.0.42.1)
+! Target: x86_64-apple-darwin15.6.0
+! Thread model: posix
+! InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+! rditldmt@ITLDMT-MD-O2034:alpha $ ./AaM0
 ! first 5 random numbers:
 ! 1. 0.78157313515666638
 ! 2. 0.85276506658379059
@@ -224,12 +207,12 @@ end program AaM0
 ! out of table = 0.0000000000000000
 ! minA = 0.17976931348623157E+309
 !
-! cpu seconds: 92.362042000000002
-! timestamp: 2017-01-22  15:01:16  UCT-0600
+! cpu seconds: 315.17698100000001
+! timestamp: 2017-01-23  18:27:37  UCT-0600
 !
 ! Fortran compiler version: GCC version 7.0.0 20170115 (experimental)
 !
-! Fortran compilation options: -fPIC -feliminate-unused-debug-symbols -mmacosx-version-min=10.12.3 -mtune=core2 -auxbase-strip AaM0.o -g -Og -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Wpedantic -Wuse-without-only -ffpe-trap=denormal -fbacktrace -fcheck=bounds -fmax-errors=5
+! Fortran compilation options: -fPIC -feliminate-unused-debug-symbols -mmacosx-version-min=10.11.6 -mtune=core2 -auxbase-strip AaM0.o -g -Og -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Wpedantic -Wuse-without-only -ffpe-trap=denormal -fbacktrace -fcheck=bounds -fmax-errors=5
 !
 ! Note: The following floating-point exceptions are signalling: IEEE_INVALID_FLAG
 ! STOP successful completion for AaM0.f08 . . .

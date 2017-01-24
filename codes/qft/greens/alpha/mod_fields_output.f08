@@ -1,11 +1,16 @@
 ! 3456789 123456789 223456789 323456789 423456789 523456789 623456789 723456789 823456789 923456789 023456789 123456789 223456789 32
-submodule ( mFields ) smFieldsOutout
+submodule ( mFields ) smFieldsOutput
+
+    use mConstants,                     only : stdout, biggest
+    use mFileHandling,                  only : safeopen_readonly, find_IU_info
 
     contains
+        ! write_f_sub
+        ! writer_sub
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
-    subroutine write_f_sub ( me, myInputs )
+    module subroutine write_f_sub ( me, myInputs )
 
         class ( fields ), target :: me
 
@@ -36,7 +41,7 @@ submodule ( mFields ) smFieldsOutout
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
-    subroutine writer_sub ( me, io_output_handle, myInputs )
+    module subroutine writer_sub ( me, io_output_handle, myInputs )
 
         class ( fields ), target :: me
 

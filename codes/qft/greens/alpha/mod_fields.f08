@@ -1,8 +1,8 @@
 module mFields
 
-    use mConstants,                     only : one, zero, half, stdout, mille, biggest
+    use mConstants,                     only : one, half, stdout, mille
     use mExtents,                       only : extents
-    use mFileHandling,                  only : safeopen_readonly, safeopen_writenew, find_IU_info
+    use mFileHandling,                  only : safeopen_readonly, safeopen_writenew
     use mInputs,                        only : inputs
     use mMasses,                        only : masses
     use mSetPrecision,                  only : ip, rp
@@ -29,78 +29,128 @@ module mFields
         type ( masses )  :: myMasses
      contains
          private
-         procedure :: aA
-         procedure, public :: writer           => writer_sub
-         procedure, public :: update_f         => update_f_fcn
-         procedure, public :: thermalize       => thermalize_sub
-         procedure, public :: housekeeping     => housekeeping_sub
-         procedure, public :: compute_sigma    => compute_sigma_sub
-         procedure, public :: greens_two_point => greens_two_point_sub
-         !procedure, public :: update_f     => update_f_fcn
+         procedure, private :: aA_fcn
+         procedure, public  :: writer           => writer_sub
+         procedure, public  :: extrema          => extrema_sub
+         procedure, public  :: update_f         => update_f_sub
+         procedure, public  :: neighbors        => neighbors_sub
+         procedure, public  :: allocator        => allocator_sub
+         procedure, public  :: thermalize       => thermalize_sub
+         procedure, public  :: housekeeping     => housekeeping_sub
+         procedure, public  :: compute_sigma    => compute_sigma_sub
+         procedure, public  :: greens_two_point => greens_two_point_sub
+         !procedure, public :: update_f     => update_f_sub
         !procedure, private, nopass :: allocate_rank_1_rp_sub
     end type fields
 
     ! local variables
-    integer,                 private :: alloc_status  = -1
-    character ( len = 512 ), private :: alloc_message = 'null'
     character ( len = * ),   private, parameter :: error_fatal = 'Program halting in module mFields due to fatal error.'
 
-    private :: aA
-    private :: allocate_rank_1_ip_sub
-    private :: allocate_rank_1_rp_sub
-    private :: allocate_rank_3_rp_sub
-    private :: allocate_rank_4_rp_sub
+    !private :: aA_fcn
+    private :: allocator_sub
+    ! private :: allocate_rank_1_ip_sub
+    ! private :: allocate_rank_1_rp_sub
+    ! private :: allocate_rank_3_rp_sub
+    ! private :: allocate_rank_4_rp_sub
     private :: compute_sigma_sub
     private :: extrema_sub
     private :: greens_two_point_sub
     private :: housekeeping_sub
+    private :: neighbors_sub
     private :: thermalize_sub
-    private :: update_f_fcn
+    private :: update_f_sub
     private :: writer_sub
     private :: write_f_sub
 
     interface
+
+        module subroutine allocator_sub ( me )
+            class ( fields ), target :: me
+        end subroutine allocator_sub
+
+        module subroutine housekeeping_sub ( me )
+            class ( fields ), target :: me
+        end subroutine housekeeping_sub
+
+        module subroutine extrema_sub ( me )
+            class ( fields ), target :: me
+        end subroutine extrema_sub
+
+        module subroutine compute_sigma_sub ( me )
+            class ( fields ), target :: me
+        end subroutine compute_sigma_sub
+
+        module subroutine neighbors_sub ( me )
+            class ( fields ), target :: me
+        end subroutine neighbors_sub
+
         module subroutine write_f_sub ( me, myInputs )
-            class ( fields ), target  :: me
+            class ( fields ), target        :: me
             type  ( inputs ), intent ( in ) :: myInputs
         end subroutine write_f_sub
 
-        module subroutine writer_sub ( me, io_output_handle, myInput )
-            class ( fields ), target  :: me
+        module subroutine writer_sub ( me, io_output_handle, myInputs )
+            class ( fields ), target :: me
             type  ( inputs ), intent ( in ), target :: myInputs
             integer,          intent ( in )         :: io_output_handle
         end subroutine writer_sub
+
     end interface
 
 contains
+    ! aA_fcn
+    ! greens_two_point_sub
+    ! thermalize_sub
+    ! update_f_sub
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
-    subroutine extrema_sub ( me )
+    function aA_fcn ( me, iu, ju, ku, lu, i, j, k, l ) result ( fcn_result )
 
         class ( fields ), target :: me
-        !locals
-            me % A_max = maxval ( me % A )
-            me % A_min = minval ( me % A )
 
-            me % C_max = maxval ( me % C )
-            me % C_min = minval ( me % C )
+        integer ( ip ),  intent ( in ) :: iu, ju, ku, lu, i, j, k, l
+        real ( rp ) :: fcn_result
+        ! locals
+        real ( rp ) :: phil, gphil, dphil, V
 
-    end subroutine extrema_sub
+            phil = abs      ( me % f (  i,  j,  k,  l ) )
+            gphil = sqrt( ( ( me % f ( iu,  j,  k,  l ) - me % f ( i, j, k, l ) )**2 &
+                         +  ( me % f (  i, ju,  k,  l ) - me % f ( i, j, k, l ) )**2 &
+                         +  ( me % f (  i,  j, ku,  l ) - me % f ( i, j, k, l ) )**2 ) )
+            dphil = abs     ( me % f (  i,  j,  k, lu ) - me % f ( i, j, k, l ) )
+            V = ( gphil / me % myExtents % as )**2 + ( me % myMasses % m * phil )**2
+            fcn_result  = me % myExtents % at * sqrt ( V ) / &
+                        ( me % myExtents % as**3 * ( me % myExtents % at**2 * V + dphil**2 ) )
+     end function aA_fcn
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
-    subroutine compute_sigma_sub ( me )
+    subroutine greens_two_point_sub ( me )
 
         class ( fields ), target :: me
-        !locals
-        real ( rp ) :: meanE2
 
-            me % meanE  = sum ( me % E_0 )        / real ( me % myExtents % Nsweeps, rp )
-                 meanE2 = sum ( me % E_0squared ) / real ( me % myExtents % Nsweeps, rp )
-            me % sigma  = sqrt ( meanE2 - me % meanE ** 2 )
+        ! locals
+        integer ( ip ) :: i, j, k, l, iu, ju, ku, lu, luu, luuu
 
-    end subroutine compute_sigma_sub
+            do i = 1, me % myExtents % Ns
+                iu = me % ups ( i )
+                do j = 1, me % myExtents % Ns
+                    ju = me % ups ( j )
+                    do k = 1, me % myExtents % Ns
+                        ku = me % ups ( k )
+                        do l = 1, me % myExtents % Nt ! time
+                            lu = me % upt ( l ); luu = me % upt ( lu ); luuu = me % upt ( luu )
+                            me % G ( 0 ) = me % G ( 0 ) + me % f ( i, j, k, l    ) * me % f ( i, j, k, l )
+                            me % G ( 1 ) = me % G ( 1 ) + me % f ( i, j, k, lu   ) * me % f ( i, j, k, l )
+                            me % G ( 2 ) = me % G ( 2 ) + me % f ( i, j, k, luu  ) * me % f ( i, j, k, l )
+                            me % G ( 3 ) = me % G ( 3 ) + me % f ( i, j, k, luuu ) * me % f ( i, j, k, l )
+                        end do
+                    end do
+                end do
+            end do
+
+    end subroutine greens_two_point_sub
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
@@ -145,28 +195,7 @@ contains
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
-    function aA ( me, iu, ju, ku, lu, i, j, k, l ) result ( fcn_result )
-
-        class ( fields ), target :: me
-
-        integer ( ip ),  intent ( in ) :: iu, ju, ku, lu, i, j, k, l
-        real ( rp ) :: fcn_result
-        ! locals
-        real ( rp ) :: phil, gphil, dphil, V
-
-            phil = abs      ( me % f (  i,  j,  k,  l ) )
-            gphil = sqrt( ( ( me % f ( iu,  j,  k,  l ) - me % f ( i, j, k, l ) )**2 &
-                         +  ( me % f (  i, ju,  k,  l ) - me % f ( i, j, k, l ) )**2 &
-                         +  ( me % f (  i,  j, ku,  l ) - me % f ( i, j, k, l ) )**2 ) )
-            dphil = abs     ( me % f (  i,  j,  k, lu ) - me % f ( i, j, k, l ) )
-            V = ( gphil / me % myExtents % as )**2 + ( me % myMasses % m * phil )**2
-            fcn_result  = me % myExtents % at * sqrt ( V ) / &
-                        ( me % myExtents % as**3 * ( me % myExtents % at**2 * V + dphil**2 ) )
-     end function aA
-
-    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-
-    subroutine update_f_fcn ( me, df )
+    subroutine update_f_sub ( me, df )
 
         class ( fields ), target :: me
 
@@ -196,18 +225,18 @@ contains
                                 lu = me % upt ( l )
                                 ld = me % dnt ( l )
                                 oldf = me % f ( i, j, k, l )
-                                oldP = me % aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
-                                     * me % aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
-                                     * me % aA (  i, ju, ku, lu, id,  j,  k,  l ) &
-                                     * me % aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
-                                     * me % aA ( iu, ju,  k, lu,  i,  j, kd,  l )
+                                oldP = me % aA_fcn ( iu, ju, ku, lu,  i,  j,  k,  l ) &
+                                     * me % aA_fcn ( iu, ju, ku,  l,  i,  j,  k, ld ) &
+                                     * me % aA_fcn (  i, ju, ku, lu, id,  j,  k,  l ) &
+                                     * me % aA_fcn ( iu,  j, ku, lu,  i, jd,  k,  l ) &
+                                     * me % aA_fcn ( iu, ju,  k, lu,  i,  j, kd,  l )
                                 call random_number ( rdn )
                                 me % f ( i, j, k, l ) = oldf + df * ( rdn - half )
-                                newP = me % aA ( iu, ju, ku, lu,  i,  j,  k,  l ) &
-                                     * me % aA ( iu, ju, ku,  l,  i,  j,  k, ld ) &
-                                     * me % aA (  i, ju, ku, lu, id,  j,  k,  l ) &
-                                     * me % aA ( iu,  j, ku, lu,  i, jd,  k,  l ) &
-                                     * me % aA ( iu, ju,  k, lu,  i,  j, kd,  l )
+                                newP = me % aA_fcn ( iu, ju, ku, lu,  i,  j,  k,  l ) &
+                                     * me % aA_fcn ( iu, ju, ku,  l,  i,  j,  k, ld ) &
+                                     * me % aA_fcn (  i, ju, ku, lu, id,  j,  k,  l ) &
+                                     * me % aA_fcn ( iu,  j, ku, lu,  i, jd,  k,  l ) &
+                                     * me % aA_fcn ( iu, ju,  k, lu,  i,  j, kd,  l )
                                 if ( newP >= oldP ) then ! accept
                                     me % naccept = me % naccept + 1
                                 else
@@ -233,272 +262,6 @@ contains
             me % ratio_accept = real ( me % naccept, rp ) / total
             me % ratio_reject = real ( me % nreject, rp ) / total
 
-    end subroutine update_f_fcn
-
-    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-
-    subroutine greens_two_point_sub ( me )
-
-        class ( fields ), target :: me
-
-        ! locals
-        integer ( ip ) :: i, j, k, l, iu, ju, ku, lu, luu, luuu
-
-            do i = 1, me % myExtents % Ns
-                iu = me % ups ( i )
-                do j = 1, me % myExtents % Ns
-                    ju = me % ups ( j )
-                    do k = 1, me % myExtents % Ns
-                        ku = me % ups ( k )
-                        do l = 1, me % myExtents % Nt ! time
-                            lu = me % upt ( l ); luu = me % upt ( lu ); luuu = me % upt ( luu )
-                            me % G ( 0 ) = me % G ( 0 ) + me % f ( i, j, k, l    ) * me % f ( i, j, k, l )
-                            me % G ( 1 ) = me % G ( 1 ) + me % f ( i, j, k, lu   ) * me % f ( i, j, k, l )
-                            me % G ( 2 ) = me % G ( 2 ) + me % f ( i, j, k, luu  ) * me % f ( i, j, k, l )
-                            me % G ( 3 ) = me % G ( 3 ) + me % f ( i, j, k, luuu ) * me % f ( i, j, k, l )
-                        end do
-                    end do
-                end do
-            end do
-
-    end subroutine greens_two_point_sub
-
-    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-
-    subroutine housekeeping_sub ( me )
-
-        class ( fields ), target :: me
-
-            call allocator_sub ( me ) ! allocate all arrays
-            call neighbors_sub ( me ) ! populate pointers to neighbors
-
-            me % naccept = 0
-            me % nreject = 0
-
-            me % highphi  = zero
-            me % highgphi = zero
-            me % highdphi = zero
-
-            me % myExtents % outoftable = zero
-
-            me % G ( : ) = zero
-
-    end subroutine housekeeping_sub
-
-    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-
-    subroutine allocator_sub ( me )
-
-        class ( fields ), target :: me
-
-            ! rank 4
-            call allocate_rank_4_rp_sub ( me % f, me % myExtents % Ns, &
-                                                  me % myExtents % Ns, &
-                                                  me % myExtents % Ns, &
-                                                  me % myExtents % Nt )
-            ! rank 3
-            call allocate_rank_3_rp_sub ( me % A, me % myExtents % Nphi  + 1, &
-                                                  me % myExtents % Ngphi + 1, &
-                                                  me % myExtents % Ndphi + 1 )
-            call allocate_rank_3_rp_sub ( me % C, me % myExtents % Nphi  + 1, &
-                                                  me % myExtents % Ngphi + 1, &
-                                                  me % myExtents % Ndphi + 1 )
-            ! rank 1
-            call allocate_rank_1_rp_sub ( me % phi,         me % myExtents % Nphi + 1 )
-            call allocate_rank_1_rp_sub ( me % gphi,        me % myExtents % Nphi + 1 )
-            call allocate_rank_1_rp_sub ( me % dphi,        me % myExtents % Nphi + 1 )
-            call allocate_rank_1_rp_sub ( me % E_0,         me % myExtents % Nsweeps )
-            call allocate_rank_1_rp_sub ( me % E_0squared,  me % myExtents % Nsweeps )
-            ! pbc
-            call allocate_rank_1_ip_sub ( me % ups,  me % myExtents % Ns )
-            call allocate_rank_1_ip_sub ( me % dns,  me % myExtents % Ns )
-            call allocate_rank_1_ip_sub ( me % upt,  me % myExtents % Nt )
-            call allocate_rank_1_ip_sub ( me % dnt,  me % myExtents % Nt )
-
-    end subroutine allocator_sub
-
-    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-
-    subroutine allocate_rank_4_rp_sub ( array, length1, length2, length3, length4 )
-
-        real ( rp ), allocatable, intent ( inout ) :: array ( : , : , : , : )
-        integer ( ip ),           intent ( in )    :: length1, length2, length3, length4
-
-            ! deallocate if needed
-            if ( allocated ( array ) ) then
-                write ( stdout, 100 ) 'Warning: deallocating rank 4 array...'
-                deallocate ( array, stat = alloc_status, errmsg = alloc_message )
-                if ( alloc_status /= 0 ) then
-                    write ( stdout, 100 ) 'Error deallocating rank 4 array of ', length1, ' x ', &
-                                                                                 length2, ' x ', &
-                                                                                 length3, ' x ', &
-                                                                                 length4, ' elements, type real ( rp )'
-                    write ( stdout, 100 ) 'error message: ', trim ( alloc_message ), '.'
-                    write ( stdout, 100 ) 'error number:  ', alloc_status
-                    stop error_fatal
-                end if
-            end if
-
-            ! allocate array
-            allocate ( array ( 1 : length1, 1 : length2, 1 : length3, 1 : length4 ), stat = alloc_status, errmsg = alloc_message )
-            if ( alloc_status /= 0 ) then
-                write ( stdout, 100 ) 'Error allocating rank 4 array of ', length1, ' x ', &
-                                                                           length2, ' x ', &
-                                                                           length3, ' x ', &
-                                                                           length4, ' elements, type real ( rp )'
-                write ( stdout, 100 ) 'error message: ', trim ( alloc_message ), '.'
-                write ( stdout, 100 ) 'error number:  ', alloc_status
-                stop error_fatal
-            end if
-
-            array ( : , : , : , : ) = zero
-
-        return
-
-    100 format ( * ( g0 ) )
-
-    end subroutine allocate_rank_4_rp_sub
-
-    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-
-    subroutine allocate_rank_3_rp_sub ( array, length1, length2, length3 )
-
-        real ( rp ), allocatable, intent ( inout ) :: array ( : , : , : )
-        integer ( ip ),           intent ( in )    :: length1, length2, length3
-
-            ! deallocate if needed
-            if ( allocated ( array ) ) then
-                write ( stdout, 100 ) 'Warning: deallocating rank 1 array...'
-                deallocate ( array, stat = alloc_status, errmsg = alloc_message )
-                if ( alloc_status /= 0 ) then
-                write ( stdout, 100 ) 'Error deallocating rank 4 array of ', length1, ' x ', &
-                                                                             length2, ' x ', &
-                                                                             length3, ' elements, type real ( rp )'
-                    write ( stdout, 100 ) 'error message: ', trim ( alloc_message ), '.'
-                    write ( stdout, 100 ) 'error number:  ', alloc_status
-                    stop error_fatal
-                end if
-            end if
-
-            ! allocate array
-            allocate ( array ( 1 : length1, 1 : length2, 1 : length3 ), stat = alloc_status, errmsg = alloc_message )
-            if ( alloc_status /= 0 ) then
-                write ( stdout, 100 ) 'Error allocating rank 4 array of ', length1, ' x ', &
-                                                                           length2, ' x ', &
-                                                                           length3, ' elements, type real ( rp )'
-                write ( stdout, 100 ) 'error message: ', trim ( alloc_message ), '.'
-                write ( stdout, 100 ) 'error number:  ', alloc_status
-                stop error_fatal
-            end if
-
-            array ( : , : , : ) = zero
-
-        return
-
-    100 format ( * ( g0 ) )
-
-    end subroutine allocate_rank_3_rp_sub
-
-    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-
-    subroutine allocate_rank_1_rp_sub ( array, length )
-
-        real ( rp ), allocatable, intent ( inout ) :: array ( : )
-        integer ( ip ),           intent ( in )    :: length
-
-            ! deallocate if needed
-            if ( allocated ( array ) ) then
-                write ( stdout, 100 ) 'Warning: deallocating rank 1 array...'
-                deallocate ( array, stat = alloc_status, errmsg = alloc_message )
-                if ( alloc_status /= 0 ) then
-                    write ( stdout, 100 ) 'Error deallocating rank 1 array of ', length, ' elements, type real ( rp )'
-                    write ( stdout, 100 ) 'error message: ', trim ( alloc_message ), '.'
-                    write ( stdout, 100 ) 'error number:  ', alloc_status
-                    stop error_fatal
-                end if
-            end if
-
-            ! allocate array
-            allocate ( array ( 1 : length ), stat = alloc_status, errmsg = alloc_message )
-            if ( alloc_status /= 0 ) then
-                write ( stdout, 100 ) 'Error allocating rank 1 array of ', length, ' elements, type integer ( ip )'
-                write ( stdout, 100 ) 'error message: ', trim ( alloc_message ), '.'
-                write ( stdout, 100 ) 'error number:  ', alloc_status
-                stop error_fatal
-            end if
-
-            array ( : ) = zero
-
-        return
-
-    100 format ( * ( g0 ) )
-
-    end subroutine allocate_rank_1_rp_sub
-
-    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-
-    subroutine allocate_rank_1_ip_sub ( array, length )
-
-        integer ( ip ), allocatable, intent ( inout ) :: array ( : )
-        integer ( ip ),              intent ( in )    :: length
-
-            ! deallocate if needed
-            if ( allocated ( array ) ) then
-                write ( stdout, 100 ) 'Warning: deallocating rank 1 array...'
-                deallocate ( array, stat = alloc_status, errmsg = alloc_message )
-                if ( alloc_status /= 0 ) then
-                    write ( stdout, 100 ) 'Error deallocating rank 1 array of ', length, ' elements, type integer ( ip )'
-                    write ( stdout, 100 ) 'error message: ', trim ( alloc_message ), '.'
-                    write ( stdout, 100 ) 'error number:  ', alloc_status
-                    stop error_fatal
-                end if
-            end if
-
-            ! allocate array
-            allocate ( array ( 1 : length ), stat = alloc_status, errmsg = alloc_message )
-            if ( alloc_status /= 0 ) then
-                write ( stdout, 100 ) 'Error allocating rank 1 array of ', length, ' elements, type integer ( ip )'
-                write ( stdout, 100 ) 'error message: ', trim ( alloc_message ), '.'
-                write ( stdout, 100 ) 'error number:  ', alloc_status
-                stop error_fatal
-            end if
-
-            array ( : ) = 0
-
-        return
-
-    100 format ( * ( g0 ) )
-
-    end subroutine allocate_rank_1_ip_sub
-
-    !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-
-    subroutine neighbors_sub ( me )
-
-        class ( fields ), target :: me
-        ! local
-        integer ( ip ) :: i
-
-            ! make tables for periodic boundary conditions
-            ! time
-            me % upt ( me % myExtents % Nt ) = 1
-            me % dnt ( 1 )  = me % myExtents % Nt
-            do i = 1, me % myExtents % Nt - 1
-                me % upt ( i ) = i + 1
-            end do
-            do i = 2, me % myExtents % Nt
-                me % dnt ( i ) = i - 1
-            end do
-            ! space
-            me % ups ( me % myExtents % Ns ) = 1
-            me % dns ( 1 )  = me % myExtents % Ns
-            do i = 1, me % myExtents % Ns - 1
-                me % ups ( i ) = i + 1
-            end do
-            do i = 2, me % myExtents % Ns
-                me % dns ( i ) = i - 1
-            end do
-
-    end subroutine neighbors_sub
+    end subroutine update_f_sub
 
 end module mFields
