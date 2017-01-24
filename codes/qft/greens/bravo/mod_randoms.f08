@@ -4,8 +4,10 @@
 
 module mRandoms
 
-    use, intrinsic :: iso_fortran_env, only : INT64 ! can't be changed gracefully
-    use mSetPrecision,                 only : rp
+    use, intrinsic :: iso_fortran_env,  only : INT64 ! can't be changed gracefully
+
+    use mConstants,                     only : fmt_generic
+    use mSetPrecision,                  only : rp
 
     implicit NONE
 
@@ -94,10 +96,10 @@ contains ! methods: subroutines and functions
             if ( .not. allocated ( SeedUsed ) ) then
                 allocate ( SeedUsed ( 1 : seed_size ), stat = alloc_status, errmsg = alloc_message )
                 if ( alloc_status /= 0 ) then
-                    write ( *, 100 ) "integer", "seed"
-                    write ( *, 110 ) seed_size
-                    write ( *, 120 ) alloc_status
-                    write ( *, 130 ) trim ( alloc_message )
+                    write ( *, fmt_generic ) "Error allocating memory for integer array 'seed'."
+                    write ( *, fmt_generic ) "  requested size is ", seed_size, " elements"
+                    write ( *, fmt_generic ) "  stat = ", alloc_status
+                    write ( *, fmt_generic ) "  errmsg = ", trim ( alloc_message ), "."
                     stop stop_msg
                 end if ! error
             end if ! allocated
@@ -128,20 +130,13 @@ contains ! methods: subroutines and functions
             flipped_Count = byte_flipper ( myCount )
             flipped_CPU   = byte_flipper ( myCPU_integer )
 
-            lcg_input = ieor ( flipped_Count, flipped_CPU )
+            lcg_input = ieor ( flipped_Count, flipped_CPU ) ! linear congruential generator
 
             do k = 1, seed_size
-                SeedUsed ( k ) = lcg ( lcg_seed = lcg_input )
+                SeedUsed ( k ) = lcg ( lcg_seed = lcg_input ) ! assemble seed
             end do
 
             call random_seed ( put = SeedUsed )
-
-            return
-
-            100  format ( /, "Error allocating memory for ", g0, " array ", g0, "." )
-            110  format (    "  requested size is ", g0, " elements" )
-            120  format (    "  stat = ", g0 )
-            130  format (    "  errmsg = ", g0, "." )
 
         contains
             ! https://gcc.gnu.org/onlinedocs/gfortran/RANDOM_005fSEED.html

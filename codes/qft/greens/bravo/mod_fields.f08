@@ -1,6 +1,7 @@
+! 3456789 123456789 223456789 323456789 423456789 523456789 623456789 723456789 823456789 923456789 023456789 123456789 223456789 32
 module mFields
 
-    use mConstants,                     only : one, half, stdout, mille
+    use mConstants,                     only : one, half, stdout, mille, fmt_generic
     use mExtents,                       only : extents
     use mFileHandling,                  only : safeopen_readonly, safeopen_writenew
     use mInputs,                        only : inputs
@@ -163,11 +164,11 @@ contains
 
             ! read in a thermalized array or heat up a cold array
             if ( temp == 'hot' ) then
-                write ( stdout, 100 ) 'The temp is ', temp
+                write ( stdout, fmt_generic ) 'The temp is ', temp
                 io_in_farray = safeopen_readonly ( farray )
                 read ( io_in_farray, * ) me % f
             else if ( temp == 'cold') then
-                write ( stdout, 100 ) 'The temp is ', temp
+                write ( stdout, fmt_generic ) 'The temp is ', temp
                 do i = 1, me % myExtents % Ns
                     do j = 1, me % myExtents % Ns
                         do k = 1, me % myExtents % Ns
@@ -179,13 +180,9 @@ contains
                     end do ! j
                 end do ! i
                 else
-                    write ( stdout, 100 ) 'Unrecognized temperature: should be "hot" or "cold". Input value was ', temp, '.'
+                    write ( stdout, fmt_generic ) 'Unrecognized temperature: should be "hot" or "cold". Input value was ', temp, '.'
                     stop 'Fatal error - I need to know the temperature.'
             end if
-
-            return
-
-        100 format ( * ( g0 ) )
 
     end subroutine thermalize_sub
 

@@ -3,7 +3,7 @@ program AaM0
 
     use, intrinsic :: iso_fortran_env,  only : compiler_version, compiler_options
 
-    use mConstants,                     only : stdout, zero, mySeed
+    use mConstants,                     only : stdout, zero, mySeed, fmt_generic
     use mExtents,                       only : extents
     use mFields,                        only : fields
     use mFileHandling,                  only : safeopen_readonly
@@ -31,22 +31,21 @@ program AaM0
     type ( masses ),  pointer :: mass => null ( )
     type ( inputs ),  pointer :: in   => null ( )
 
-    !character ( len = 64 ) :: tablename = '', temp = '', farray = '', root = ''
-    character ( len = *  ), parameter :: input_file = 'inM0m1a.1'
+    character ( len = * ), parameter :: input_file = 'inM0m1a.1'
 
         call cpu_time ( cpu_time_start )
 
             ! call init_random_seed_sub ( FlagCheckOS = .true. )
             ! write ( stdout, 110 ) 'random number seed ', SeedUsed
             call init_random_seed_sub ( mySeed )
-            write ( stdout, 100 ) 'first 5 random numbers:'
+            write ( stdout, fmt_generic ) 'first 5 random numbers:'
             do k = 1, 5
                 call random_number ( random )
-                write ( stdout, 100 ) k, '. ', random
+                write ( stdout, fmt_generic ) k, '. ', random
             end do
 
             io_in_run_parameters = safeopen_readonly ( input_file )
-            write ( stdout, 100 ) 'Reading parameters in file ', input_file, '.'
+            write ( stdout, fmt_generic ) 'Reading parameters in file ', input_file, '.'
 
             ex     => myFields % myExtents
             mass   => myFields % myMasses
@@ -81,17 +80,17 @@ program AaM0
                 mass % m    = ParameterCollection ( kPS ) % m
                 ex   % at   = ParameterCollection ( kPS ) % at
                 ex   % as   = ParameterCollection ( kPS ) % a
-                write ( stdout, 100 ) kPS, ': Mass = ', mass % Mass
-                write ( stdout, 100 ) kPS, ': m    = ', mass % m
+                write ( stdout, fmt_generic ) kPS, ': Mass = ', mass % Mass
+                write ( stdout, fmt_generic ) kPS, ': m    = ', mass % m
 
                 ex % phistep  = ex % maxPhi  / real ( ex % Nphi,  rp )
                 ex % gphistep = ex % maxGphi / real ( ex % Ngphi, rp )
                 ex % dphistep = ex % maxDphi / real ( ex % Ndphi, rp )
 
                 call myFields % thermalize ( temp = in % temp, farray = in % farray )
-                write ( stdout, 100 ) 'thermalized: farray = ', in % farray
+                write ( stdout, fmt_generic ) 'thermalized: farray = ', in % farray
                 call myFields % update_f ( df = ex % df )
-                write ( stdout, 100 ) 'updated'
+                write ( stdout, fmt_generic ) 'updated'
                 call myFields % greens_two_point ( )
                 call myFields % compute_sigma ( )
                 call myFields % extrema ( )
@@ -106,18 +105,16 @@ program AaM0
         cpu_time_elapsed = cpu_time_stop - cpu_time_start
 
         write ( stdout, * )
-        write ( stdout, 100 ) 'cpu seconds: ', cpu_time_elapsed
-        write ( stdout, 100 ) 'timestamp: ', timestamp ( )
+        write ( stdout, fmt_generic ) 'cpu seconds: ', cpu_time_elapsed
+        write ( stdout, fmt_generic ) 'timestamp: ', timestamp ( )
 
         write ( stdout, * )
-        write ( stdout, 100 ) 'Fortran compiler version: ', compiler_version ( )
+        write ( stdout, fmt_generic ) 'Fortran compiler version: ', compiler_version ( )
         write ( stdout, * )
-        write ( stdout, 100 ) 'Fortran compilation options: ', compiler_options ( )
+        write ( stdout, fmt_generic ) 'Fortran compilation options: ', compiler_options ( )
 
         write ( stdout, * )
         stop 'successful completion for AaM0.f08 . . .'
-
-    100 format ( * ( g0 ) )
 
 end program AaM0
 

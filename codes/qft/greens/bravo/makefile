@@ -62,7 +62,7 @@ mod_fields.o                  : mod_set_precision.o mod_constants.o mod_extents.
 mod_file_handling.o           :
 mod_inputs.o                  : mod_set_precision.o
 mod_masses.o                  : mod_set_precision.o mod_constants.o
-mod_randoms.o                 : mod_set_precision.o
+mod_randoms.o                 : mod_set_precision.o mod_constants.o
 mod_set_precision.o           :
 mod_time_step.o               :
 
