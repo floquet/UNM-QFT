@@ -16,7 +16,7 @@ module mFields
         ! rank 3
         real ( rp ),    allocatable, dimension ( : , : , : )     :: A, C
         ! rank 1
-        real ( rp ),    allocatable, dimension ( : )             :: phi, gphi, dphi, E_0, E_0squared
+        real ( rp ),    allocatable, dimension ( : )             :: phi, gphi, dphi, E_0
         real ( rp ),                 dimension ( 0 : 3 )         :: G
         integer ( ip ), allocatable, dimension ( : )             :: ups, dns, upt, dnt
         ! rank 0
@@ -132,6 +132,7 @@ contains
 
             do i = 1, me % myExtents % Ns
                 iu = me % ups ( i )
+                write ( stdout, fmt_generic ) i, '. G(0) = ', me % G(0), ', G(1) = ', me % G(1), ', G(2) = ', me % G(2)
                 do j = 1, me % myExtents % Ns
                     ju = me % ups ( j )
                     do k = 1, me % myExtents % Ns
@@ -247,6 +248,7 @@ contains
                 end do ido
                 call greens_two_point_sub ( me )
                 me % E_0 ( sweep ) = ex % avolume
+                write ( stdout, fmt_generic ) 'me % E_0 ( ', sweep, ' ) = ', me % E_0 ( sweep )
             end do sweepdo
 
             ex => null ( )

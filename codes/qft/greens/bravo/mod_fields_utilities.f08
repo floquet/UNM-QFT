@@ -14,8 +14,11 @@ submodule ( mFields ) smFieldsUtilities
         !locals
         real ( rp ) :: meanE2
 
-            me % meanE  = sum ( me % E_0 )        / real ( me % myExtents % Nsweeps, rp )
-                 meanE2 = sum ( me % E_0squared ) / real ( me % myExtents % Nsweeps, rp )
+            me % meanE  = sum ( me % E_0 )                   / real ( me % myExtents % Nsweeps, rp )
+                 meanE2 = dot_product ( me % E_0, me % E_0 ) / real ( me % myExtents % Nsweeps, rp )
+            write ( stdout, fmt_generic ) 'meanE2 = ', meanE2
+            write ( stdout, fmt_generic ) 'me % meanE = ', me % meanE
+            write ( stdout, fmt_generic ) 'meanE2 - me % meanE ** 2 = ', meanE2 - me % meanE ** 2
             me % sigma  = sqrt ( meanE2 - me % meanE ** 2 )
 
     end subroutine compute_sigma_sub
