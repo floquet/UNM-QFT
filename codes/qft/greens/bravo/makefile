@@ -68,14 +68,17 @@ mod_time_step.o               :
 
 # rditldmt@ITLDMT-MD-O2034:bravo $ date
 # Tue Jan 24 16:29:39 CST 2017
+
 # rditldmt@ITLDMT-MD-O2034:bravo $ pwd
 # /Users/rditldmt/Documents/GitHub_Desktop/UNM-QFT/codes/qft/greens/bravo
+
 # rditldmt@ITLDMT-MD-O2034:bravo $ gcc --version
 # Configured with: --prefix=/Applications/Xcode.app/Contents/Developer/usr --with-gxx-include-dir=/usr/include/c++/4.2.1
 # Apple LLVM version 8.0.0 (clang-800.0.42.1)
 # Target: x86_64-apple-darwin15.6.0
 # Thread model: posix
 # InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+
 # rditldmt@ITLDMT-MD-O2034:bravo $ make debug
 # PROGRAM  = AaM0
 # PRG_OBJ  = AaM0.o
@@ -86,7 +89,7 @@ mod_time_step.o               :
 # rditldmt@ITLDMT-MD-O2034:bravo $
 # rditldmt@ITLDMT-MD-O2034:bravo $ echo $gflags
 # -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only
-# rditldmt@ITLDMT-MD-O2034:bravo $
+
 # rditldmt@ITLDMT-MD-O2034:bravo $ make
 # gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_set_precision.o mod_set_precision.f08
 # gfortran -c -g -ffpe-trap=denormal,invalid,zero -fbacktrace -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Og -pedantic -fcheck=bounds -fmax-errors=5 -Wuse-without-only -o mod_constants.o mod_constants.f08

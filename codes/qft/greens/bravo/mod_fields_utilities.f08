@@ -1,6 +1,8 @@
 ! 3456789 123456789 223456789 323456789 423456789 523456789 623456789 723456789 823456789 923456789 023456789 123456789 223456789 32
 submodule ( mFields ) smFieldsUtilities
 
+    use mConstants,                     only : two, zero
+
     contains
         ! compute_sigma_sub
         ! extrema_sub
@@ -12,11 +14,26 @@ submodule ( mFields ) smFieldsUtilities
 
         class ( fields ), target :: me
         !locals
-        real ( rp ) :: meanE2
+        real ( rp ) :: meanE2, var2
 
             me % meanE  = sum ( me % E_0 )                   / real ( me % myExtents % Nsweeps, rp )
                  meanE2 = dot_product ( me % E_0, me % E_0 ) / real ( me % myExtents % Nsweeps, rp )
-            me % sigma  = sqrt ( meanE2 - me % meanE ** 2 )
+                 var2   = meanE2 - me % meanE ** 2
+
+            ! when the energy values are identical, mean (energy**2) = (mean energy)**2
+            ! catastrophic cancelation may create a small, negative number instead of 0
+            if ( abs ( var2 ) < two * epsilon ( one ) ) then
+                me % sigma = zero
+                return
+            end if
+            if ( var2 < zero ) then
+                write ( stdout, fmt_generic ) 'mean energy      = ', meanE
+                write ( stdout, fmt_generic ) 'mean (energy**2) = ', meanE2
+                write ( stdout, fmt_generic ) 'difference = mean (energy**2) - (mean energy)**2 ', var2
+                stop error_fatal
+            end if
+
+            me % sigma  = sqrt ( var2 )
 
     end subroutine compute_sigma_sub
 
