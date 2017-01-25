@@ -44,10 +44,10 @@ program AaM0
                 write ( stdout, fmt_generic ) k, '. ', random
             end do
 
-            io_in_run_parameters = safeopen_readonly ( input_file )
+            io_in_run_parameters = safeopen_readonly ( input_file ) ! file with run parameters
             write ( stdout, fmt_generic ) 'Reading parameters in file ', input_file, '.'
 
-            ex     => myFields % myExtents
+            ex     => myFields % myExtents ! use pointers to shorten code
             mass   => myFields % myMasses
             in     => myInputs
             ! ./AaM0 < input_file
@@ -89,7 +89,7 @@ program AaM0
 
                 call myFields % thermalize ( temp = in % temp, farray = in % farray )
                 write ( stdout, fmt_generic ) 'thermalized: farray = ', in % farray
-                call myFields % update_f ( df = ex % df )
+                call myFields % update_f ( )
                 write ( stdout, fmt_generic ) 'updated'
                 call myFields % greens_two_point ( )
                 call myFields % compute_sigma ( )
@@ -237,4 +237,4 @@ end program AaM0
 !
 ! Fortran compilation options: -fPIC -feliminate-unused-debug-symbols -mmacosx-version-min=10.11.6 -mtune=core2 -auxbase-strip AaM0.o -g -Og -Wall -Waliasing -Wconversion-extra -Wextra -Wsurprising -Wimplicit-procedure -Wintrinsics-std -Wpedantic -Wuse-without-only -ffpe-trap=denormal,invalid,zero -fbacktrace -fcheck=bounds -fmax-errors=5
 !
-! STOP successful completion for AaM0.f08 . . .
+! STOP successful completion for AaM0.f08 .

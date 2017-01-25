@@ -189,13 +189,13 @@ contains
 
     !  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
 
-    subroutine update_f_sub ( me, df )
+    subroutine update_f_sub ( me )
 
         class ( fields ), target :: me
 
         type ( extents ), pointer :: ex
 
-        real ( rp ) :: oldf, oldP, newP, rdn, df
+        real ( rp ) :: oldf, oldP, newP, rdn
         real ( rp ) :: total
 
         integer ( ip ) :: sweep
@@ -225,7 +225,7 @@ contains
                                      * me % aA_fcn ( iu,  j, ku, lu,  i, jd,  k,  l ) &
                                      * me % aA_fcn ( iu, ju,  k, lu,  i,  j, kd,  l )
                                 call random_number ( rdn )
-                                me % f ( i, j, k, l ) = oldf + df * ( rdn - half )
+                                me % f ( i, j, k, l ) = oldf + ex % df * ( rdn - half )
                                 newP = me % aA_fcn ( iu, ju, ku, lu,  i,  j,  k,  l ) &
                                      * me % aA_fcn ( iu, ju, ku,  l,  i,  j,  k, ld ) &
                                      * me % aA_fcn (  i, ju, ku, lu, id,  j,  k,  l ) &
