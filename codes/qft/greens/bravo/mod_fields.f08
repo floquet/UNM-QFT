@@ -48,6 +48,7 @@ module mFields
     ! local variables
     character ( len = * ),   private, parameter :: error_fatal = 'Program halting in module mFields due to fatal error.'
 
+    ! alphabetical
     private :: allocator_sub
     private :: compute_sigma_sub
     private :: extrema_sub
