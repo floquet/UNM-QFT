@@ -88,9 +88,9 @@ program AaM0
                 ex % dphistep = ex % maxDphi / real ( ex % Ndphi, rp )
 
                 call myFields % thermalize ( temp = in % temp, farray = in % farray )
-                write ( stdout, fmt_generic ) 'thermalized: farray = ', in % farray
+                    write ( stdout, fmt_generic ) 'thermalized: farray = ', in % farray
                 call myFields % update_f ( )
-                write ( stdout, fmt_generic ) 'updated'
+                    write ( stdout, fmt_generic ) 'updated'
                 call myFields % greens_two_point ( )
                 call myFields % compute_sigma ( )
                 call myFields % extrema ( )
