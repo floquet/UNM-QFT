@@ -106,7 +106,7 @@ submodule ( mFields ) smFieldsAllocate
 
         return
 
-    100 format ( * ( g0 ) )
+        100 format ( * ( g0 ) )
 
     end subroutine allocate_rank_4_rp_sub
 
@@ -122,7 +122,7 @@ submodule ( mFields ) smFieldsAllocate
                 write ( stdout, 100 ) 'Warning: deallocating rank 1 array...'
                 deallocate ( array, stat = alloc_status, errmsg = alloc_message )
                 if ( alloc_status /= 0 ) then
-                write ( stdout, 100 ) 'Error deallocating rank 4 array of ', length1, ' x ', &
+                write ( stdout, 100 ) 'Error deallocating rank 3 array of ', length1, ' x ', &
                                                                              length2, ' x ', &
                                                                              length3, ' elements, type real ( rp )'
                     write ( stdout, 100 ) 'error message: ', trim ( alloc_message ), '.'
@@ -134,7 +134,7 @@ submodule ( mFields ) smFieldsAllocate
             ! allocate array
             allocate ( array ( 1 : length1, 1 : length2, 1 : length3 ), stat = alloc_status, errmsg = alloc_message )
             if ( alloc_status /= 0 ) then
-                write ( stdout, 100 ) 'Error allocating rank 4 array of ', length1, ' x ', &
+                write ( stdout, 100 ) 'Error allocating rank 3 array of ', length1, ' x ', &
                                                                            length2, ' x ', &
                                                                            length3, ' elements, type real ( rp )'
                 write ( stdout, 100 ) 'error message: ', trim ( alloc_message ), '.'
@@ -146,7 +146,7 @@ submodule ( mFields ) smFieldsAllocate
 
         return
 
-    100 format ( * ( g0 ) )
+        100 format ( * ( g0 ) )
 
     end subroutine allocate_rank_3_rp_sub
 
@@ -182,7 +182,7 @@ submodule ( mFields ) smFieldsAllocate
 
         return
 
-    100 format ( * ( g0 ) )
+        100 format ( * ( g0 ) )
 
     end subroutine allocate_rank_1_rp_sub
 
@@ -218,7 +218,7 @@ submodule ( mFields ) smFieldsAllocate
 
         return
 
-    100 format ( * ( g0 ) )
+        100 format ( * ( g0 ) )
 
     end subroutine allocate_rank_1_ip_sub
 
